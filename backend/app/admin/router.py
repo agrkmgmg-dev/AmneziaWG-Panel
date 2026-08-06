@@ -4,9 +4,13 @@ Admin dashboard router.
 Provides web admin pages.
 """
 
-from fastapi import APIRouter, Request
-from fastapi.templating import Jinja2Templates
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from backend.app.db.database import get_db
+from backend.app.services.dashboard import DashboardService
 
 
 router = APIRouter(
@@ -20,24 +24,35 @@ templates = Jinja2Templates(
 )
 
 
+async def get_dashboard_service(
+    session: AsyncSession = Depends(get_db),
+) -> DashboardService:
+    """
+    Provide DashboardService instance.
+    """
+
+    return DashboardService(session)
+
+
 @router.get(
     "/dashboard",
     response_class=HTMLResponse,
 )
 async def dashboard(
     request: Request,
+    service: DashboardService = Depends(get_dashboard_service),
 ) -> HTMLResponse:
     """
     Render admin dashboard page.
     """
 
+    stats = await service.get_dashboard_stats()
+
     return templates.TemplateResponse(
         request=request,
         name="admin/dashboard.html",
         context={
-            "users_count": 0,
-            "peers_count": 0,
-            "traffic_count": 0,
-            "logs_count": 0,
+            "request": request,
+            **stats,
         },
     )

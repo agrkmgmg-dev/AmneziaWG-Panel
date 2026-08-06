@@ -12,8 +12,14 @@ class UserRepository(BaseRepository[User]):
     Contains user-specific database operations.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
-        super().__init__(session=session, model=User)
+    def __init__(
+        self,
+        session: AsyncSession,
+    ) -> None:
+        super().__init__(
+            session=session,
+            model=User,
+        )
 
     async def get_by_username(
         self,
@@ -44,3 +50,15 @@ class UserRepository(BaseRepository[User]):
         )
 
         return result.scalar_one() > 0
+
+    async def count(self) -> int:
+        """
+        Count total users.
+        """
+
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(User)
+        )
+
+        return result.scalar_one()

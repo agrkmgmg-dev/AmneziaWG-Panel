@@ -51,5 +51,15 @@ class PeerRepository(BaseRepository[Peer]):
             .select_from(Peer)
             .where(Peer.user_id == user_id)
         )
+    async def count(self) -> int:
+        """
+        Count total peers.
+        """
+
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(Peer)
+        )
 
         return result.scalar_one()
+ 

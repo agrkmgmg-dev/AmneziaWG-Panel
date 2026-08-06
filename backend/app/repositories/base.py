@@ -1,6 +1,6 @@
 from typing import Generic, TypeVar
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -49,6 +49,17 @@ class BaseRepository(Generic[ModelType]):
         )
 
         return list(result.scalars().all())
+
+    async def count(self) -> int:
+        """
+        Return total records count.
+        """
+
+        result = await self.session.execute(
+            select(func.count()).select_from(self.model)
+        )
+
+        return result.scalar_one()
 
     async def create(
         self,

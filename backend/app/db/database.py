@@ -19,29 +19,16 @@ from sqlalchemy.ext.asyncio import (
 from backend.app.core.config import settings
 
 
-# -----------------------------------------------------
-# Database URL conversion
-# -----------------------------------------------------
-
 DATABASE_URL = settings.DATABASE_URL
 
 
-# SQLite sync URL -> async driver
 if DATABASE_URL.startswith("sqlite:///"):
     DATABASE_URL = DATABASE_URL.replace(
         "sqlite:///",
         "sqlite+aiosqlite:///",
-        1
+        1,
     )
 
-
-# PostgreSQL support:
-# postgresql+asyncpg://user:pass@host/db
-
-
-# -----------------------------------------------------
-# Engine
-# -----------------------------------------------------
 
 engine = create_async_engine(
     DATABASE_URL,
@@ -49,10 +36,6 @@ engine = create_async_engine(
     future=True,
 )
 
-
-# -----------------------------------------------------
-# Session Factory
-# -----------------------------------------------------
 
 AsyncSessionLocal = async_sessionmaker(
     bind=engine,
@@ -63,25 +46,13 @@ AsyncSessionLocal = async_sessionmaker(
 )
 
 
-# -----------------------------------------------------
-# FastAPI Dependency
-# -----------------------------------------------------
-
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Provide database session.
-
-    Usage:
-
-    async def endpoint(
-        db: AsyncSession = Depends(get_db)
-    ):
-        ...
     """
 
     async with AsyncSessionLocal() as session:
         try:
             yield session
-
         finally:
             await session.close()

@@ -61,5 +61,14 @@ class TrafficRepository(BaseRepository[Traffic]):
                 )
             ).where(Traffic.peer_id == peer_id)
         )
+    async def count(self) -> int:
+        """
+        Count total traffic records.
+        """
+
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(Traffic)
+        )
 
         return result.scalar_one()
