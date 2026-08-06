@@ -1,18 +1,76 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
-    <title>AmneziaWG Panel</title>
+    <title>AmneziaWG Panel - Dashboard</title>
+
+    <link rel="stylesheet" href="/static/css/admin.css">
 </head>
 
 <body>
 
-<h1>Dashboard New Version</h1>
+<div class="container">
 
-<p>Users: {{ users_count }}</p>
-<p>Peers: {{ peers_count }}</p>
-<p>Traffic: {{ traffic_count }}</p>
-<p>Logs: {{ logs_count }}</p>
+    <header class="dashboard-header">
+        <h1>AmneziaWG Panel</h1>
+        <p>پنل مدیریت سرور VPN</p>
+    </header>
+
+
+    <section class="cards">
+
+        <div class="card">
+            <h3>👤 کاربران</h3>
+            <span>{{ users_count }}</span>
+        </div>
+
+
+        <div class="card">
+            <h3>🔑 کلاینت‌ها</h3>
+            <span>{{ peers_count }}</span>
+        </div>
+
+
+        <div class="card">
+            <h3>📊 ترافیک</h3>
+            <span>{{ traffic_count }}</span>
+        </div>
+
+
+        <div class="card">
+            <h3>📝 لاگ‌ها</h3>
+            <span>{{ logs_count }}</span>
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>وضعیت سیستم</h2>
+
+        <div class="status">
+            <span class="online"></span>
+            Dashboard فعال است
+        </div>
+
+    </section>
+
+
+    <section class="panel">
+
+        <h2>آخرین فعالیت‌ها</h2>
+
+        <p>
+            هنوز فعالیتی ثبت نشده است.
+        </p>
+
+    </section>
+
+
+</div>
 
 </body>
+
 </html>
