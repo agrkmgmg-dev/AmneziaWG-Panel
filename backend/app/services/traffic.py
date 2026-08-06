@@ -89,8 +89,9 @@ class TrafficService(BaseService):
 
         traffic = Traffic(
             peer_id=data.peer_id,
-            download=data.download,
-            upload=data.upload,
+            upload_bytes=data.upload_bytes,
+            download_bytes=data.download_bytes,
+            total_bytes=data.upload_bytes + data.download_bytes,
         )
 
         traffic = await self.repository.create(traffic)
