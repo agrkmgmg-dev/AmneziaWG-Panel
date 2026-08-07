@@ -16,8 +16,8 @@ from backend.app.core.jwt import (
 
 from backend.app.core.security import verify_password
 
+from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
-from backend.app.schemas.user import UserResponse
 
 
 class AuthService:
@@ -29,15 +29,14 @@ class AuthService:
         self,
         session: AsyncSession,
     ) -> None:
-
+        self.session = session
         self.repository = UserRepository(session)
-
 
     async def authenticate(
         self,
         username: str,
         password: str,
-    ) -> UserResponse | None:
+    ) -> User | None:
         """
         Validate user credentials.
         """
@@ -55,8 +54,10 @@ class AuthService:
         ):
             return None
 
-        return UserResponse.model_validate(user)
+        if not user.is_active:
+            return None
 
+        return user
 
     def create_tokens(
         self,
