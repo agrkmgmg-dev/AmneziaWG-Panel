@@ -1,81 +1,118 @@
-<!DOCTYPE html>
-<html lang="fa">
-
-<head>
-    <meta charset="UTF-8">
-    <title>AmneziaWG Peers</title>
-</head>
-
-<body>
-
 <h2>🔑 کلاینت‌های AmneziaWG</h2>
 
-<p>
-    <a href="/admin/peers/create">➕ ایجاد کلاینت جدید</a>
-</p>
+<a href="/admin/peers/create">
+    ➕ ایجاد کلاینت جدید
+</a>
 
-<table border="1" cellpadding="8" cellspacing="0">
+<br><br>
 
-    <tr>
-        <th>ID</th>
-        <th>Name</th>
-        <th>IP</th>
-        <th>Action</th>
-    </tr>
+<table border="1">
 
-    {% if peers %}
+<tr>
+    <th>ID</th>
+    <th>Name</th>
+    <th>IP</th>
+    <th>Status</th>
+    <th>Expire</th>
+    <th>Action</th>
+</tr>
 
-        {% for peer in peers %}
 
-        <tr>
+{% if peers %}
 
-            <td>{{ peer.id }}</td>
+{% for peer in peers %}
 
-            <td>{{ peer.name }}</td>
+<tr>
 
-            <td>{{ peer.address }}</td>
+    <td>
+        {{ peer.id }}
+    </td>
 
-            <td>
 
-                <a href="/admin/peers/{{ peer.id }}/config">
-                    ⬇️ کانفیگ
-                </a>
+    <td>
+        {{ peer.name }}
+    </td>
 
-                |
 
-                <a href="/admin/peers/{{ peer.id }}/qr">
-                    📱 QR
-                </a>
+    <td>
+        {{ peer.address }}
+    </td>
 
-                |
 
-                <a href="/admin/peers/{{ peer.id }}/delete">
-                    🗑 حذف
-                </a>
+    <td>
 
-            </td>
+        {% if peer.status == "🟢 فعال" %}
+            🟢 فعال
 
-        </tr>
+        {% elif peer.status == "🔴 منقضی شده" %}
+            🔴 منقضی شده
 
-        {% endfor %}
+        {% elif peer.status == "🔴 غیرفعال" %}
+            🔴 غیرفعال
 
-    {% else %}
+        {% else %}
+            ⚪ بدون تاریخ
 
-        <tr>
-            <td colspan="4">
-                هیچ کلاینتی وجود ندارد
-            </td>
-        </tr>
+        {% endif %}
 
-    {% endif %}
+    </td>
+
+
+    <td>
+
+        {% if peer.expires_at %}
+            {{ peer.expires_at }}
+
+        {% else %}
+            بدون تاریخ
+
+        {% endif %}
+
+    </td>
+
+
+    <td>
+
+        <a href="/admin/peers/{{ peer.id }}/config">
+            ⬇️ کانفیگ
+        </a>
+
+        |
+
+        <a href="/admin/peers/{{ peer.id }}/qr">
+            📱 QR
+        </a>
+
+        |
+
+        <a href="/admin/peers/{{ peer.id }}/delete">
+            🗑 حذف
+        </a>
+
+    </td>
+
+
+</tr>
+
+{% endfor %}
+
+
+{% else %}
+
+<tr>
+    <td colspan="6">
+        هیچ کلاینتی وجود ندارد
+    </td>
+</tr>
+
+{% endif %}
+
 
 </table>
+
 
 <br>
 
 <a href="/admin/dashboard">
     ← بازگشت به داشبورد
 </a>
-
-</body>
-</html>

@@ -8,6 +8,7 @@ from backend.app.models.peer import Peer
 from backend.app.repositories.peer import PeerRepository
 from backend.app.services.ip_manager import IPManagerService
 from backend.app.services.key_generator import KeyGeneratorService
+from backend.app.services.expiration import ExpirationService
 
 
 class AdminPeerService:
@@ -20,20 +21,47 @@ class AdminPeerService:
         session: AsyncSession,
     ) -> None:
 
-        self.peer_repository = PeerRepository(session)
+        self.peer_repository = PeerRepository(
+            session
+        )
+
 
     async def get_peers(
         self,
     ) -> list[Peer]:
+        """
+        Return all peers with expiration status.
+        """
 
-        return await self.peer_repository.get_all_with_users()
+        peers = await self.peer_repository.get_all_with_users()
+
+        for peer in peers:
+            peer.status = ExpirationService.get_status(
+                peer
+            )
+
+        return peers
+
 
     async def get_peer(
         self,
         peer_id: int,
     ) -> Peer | None:
+        """
+        Return one peer with status.
+        """
 
-        return await self.peer_repository.get_by_id(peer_id)
+        peer = await self.peer_repository.get_by_id(
+            peer_id
+        )
+
+        if peer:
+            peer.status = ExpirationService.get_status(
+                peer
+            )
+
+        return peer
+
 
     async def create_peer(
         self,
@@ -46,13 +74,17 @@ class AdminPeerService:
         """
 
         key_service = KeyGeneratorService()
-        ip_service = IPManagerService(self.peer_repository)
+
+        ip_service = IPManagerService(
+            self.peer_repository
+        )
 
         private_key, public_key = (
             key_service.generate_keypair()
         )
 
         address = await ip_service.get_next_ip()
+
 
         peer = Peer(
             user_id=user_id,
@@ -64,18 +96,30 @@ class AdminPeerService:
             is_active=True,
         )
 
-        return await self.peer_repository.create(peer)
+
+        return await self.peer_repository.create(
+            peer
+        )
+
 
     async def delete_peer(
         self,
         peer_id: int,
     ) -> bool:
+        """
+        Delete peer by ID.
+        """
 
-        peer = await self.peer_repository.get_by_id(peer_id)
+        peer = await self.peer_repository.get_by_id(
+            peer_id
+        )
 
         if peer is None:
             return False
 
-        await self.peer_repository.delete(peer)
+
+        await self.peer_repository.delete(
+            peer
+        )
 
         return True
