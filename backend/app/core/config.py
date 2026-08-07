@@ -2,6 +2,7 @@
 Application configuration management.
 
 Uses:
+
 - Pydantic v2 Settings
 - Environment variables
 - .env file support
@@ -64,7 +65,7 @@ class Settings(BaseSettings):
 
 
     # -------------------------------------------------
-    # Security
+    # Security / JWT
     # -------------------------------------------------
 
     SECRET_KEY: str = Field(
@@ -77,6 +78,10 @@ class Settings(BaseSettings):
 
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(
         default=30
+    )
+
+    JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = Field(
+        default=7
     )
 
     SESSION_TIMEOUT_MINUTES: int = Field(
@@ -182,6 +187,10 @@ class Settings(BaseSettings):
         default="change_this_password"
     )
 
+
+    # -------------------------------------------------
+    # Pydantic Settings Config
+    # -------------------------------------------------
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
