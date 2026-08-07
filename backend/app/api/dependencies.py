@@ -18,15 +18,12 @@ from backend.app.services import (
     UserService,
 )
 
+from backend.app.services.auth import AuthService
+
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """
     Provide async database session.
-
-    Session lifecycle is managed here.
-
-    Yields:
-        Async SQLAlchemy session.
     """
 
     async with AsyncSessionLocal() as session:
@@ -38,12 +35,6 @@ def get_user_service(
 ) -> UserService:
     """
     Provide UserService instance.
-
-    Args:
-        session: Database session.
-
-    Returns:
-        UserService instance.
     """
 
     return UserService(session)
@@ -54,12 +45,6 @@ def get_peer_service(
 ) -> PeerService:
     """
     Provide PeerService instance.
-
-    Args:
-        session: Database session.
-
-    Returns:
-        PeerService instance.
     """
 
     return PeerService(session)
@@ -70,12 +55,6 @@ def get_traffic_service(
 ) -> TrafficService:
     """
     Provide TrafficService instance.
-
-    Args:
-        session: Database session.
-
-    Returns:
-        TrafficService instance.
     """
 
     return TrafficService(session)
@@ -86,12 +65,16 @@ def get_activity_log_service(
 ) -> ActivityLogService:
     """
     Provide ActivityLogService instance.
-
-    Args:
-        session: Database session.
-
-    Returns:
-        ActivityLogService instance.
     """
 
     return ActivityLogService(session)
+
+
+def get_auth_service(
+    session: AsyncSession = Depends(get_db),
+) -> AuthService:
+    """
+    Provide AuthService instance.
+    """
+
+    return AuthService(session)
