@@ -1,10 +1,3 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-
-from backend.app.api.dependencies import get_traffic_service
-from backend.app.schemas.traffic import TrafficCreate, TrafficResponse
-from backend.app.services.traffic import TrafficService
-
-
 """
 Traffic API router.
 """
@@ -16,18 +9,14 @@ from fastapi import (
     status,
 )
 
-from backend.app.api.dependencies import (
-    get_traffic_service,
-)
-
+from backend.app.api.dependencies import get_traffic_service
+from backend.app.core.dependencies import require_active_user
+from backend.app.models.user import User
 from backend.app.schemas.traffic import (
     TrafficCreate,
     TrafficResponse,
 )
-
-from backend.app.services.traffic import (
-    TrafficService,
-)
+from backend.app.services.traffic import TrafficService
 
 
 router = APIRouter(
@@ -41,9 +30,8 @@ router = APIRouter(
     response_model=list[TrafficResponse],
 )
 async def get_traffic_records(
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> list[TrafficResponse]:
     """
     Get all traffic records.
@@ -59,9 +47,8 @@ async def get_traffic_records(
 )
 async def get_traffic(
     traffic_id: int,
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> TrafficResponse:
     """
     Get traffic record by ID.
@@ -88,9 +75,8 @@ async def get_traffic(
 )
 async def create_traffic(
     data: TrafficCreate,
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> TrafficResponse:
     """
     Create traffic record.
@@ -108,9 +94,8 @@ async def create_traffic(
 )
 async def delete_traffic(
     traffic_id: int,
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> None:
     """
     Delete traffic record by ID.
@@ -133,9 +118,8 @@ async def delete_traffic(
 )
 async def get_peer_usage(
     peer_id: int,
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> dict:
     """
     Get traffic usage of a peer.
@@ -153,9 +137,8 @@ async def get_peer_usage(
 async def check_peer_limit(
     peer_id: int,
     limit_bytes: int,
-    service: TrafficService = Depends(
-        get_traffic_service
-    ),
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
 ) -> dict:
     """
     Check peer traffic limit.
