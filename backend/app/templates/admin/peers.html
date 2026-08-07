@@ -1,30 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Peers</title>
+</head>
+
+<body>
+
 <h2>🔑 کلاینت‌های AmneziaWG</h2>
 
-<a href="/admin/peers/create">
-➕ ایجاد کلاینت جدید
-</a>
+<table border="1">
 
-<br><br>
-
-<table border="1" width="100%" cellpadding="8">
-
-<thead>
 <tr>
     <th>ID</th>
-    <th>نام کلاینت</th>
-    <th>کاربر</th>
+    <th>Name</th>
     <th>IP</th>
-    <th>Public Key</th>
-    <th>وضعیت</th>
-    <th>انقضا</th>
-    <th>عملیات</th>
+    <th>Action</th>
 </tr>
-</thead>
 
-
-<tbody>
-
-{% if peers %}
 
 {% for peer in peers %}
 
@@ -34,81 +26,26 @@
 {{ peer.id }}
 </td>
 
-
 <td>
 {{ peer.name }}
 </td>
-
-
-<td>
-{% if peer.user %}
-{{ peer.user.username }}
-{% else %}
--
-{% endif %}
-</td>
-
 
 <td>
 {{ peer.address }}
 </td>
 
-
 <td>
-{{ peer.public_key[:15] }}...
-</td>
-
-
-<td>
-
-{% if peer.is_active %}
-✅ فعال
-{% else %}
-❌ غیرفعال
-{% endif %}
-
-</td>
-
-
-<td>
-{{ peer.expires_at or "-" }}
-</td>
-
-
-<td>
-
-<a href="/admin/peers/{{ peer.id }}/delete">
-🗑 حذف
+<a href="/admin/peers/{{ peer.id }}/config">
+⬇️ کانفیگ
 </a>
-
 </td>
-
 
 </tr>
 
 {% endfor %}
 
 
-{% else %}
-
-<tr>
-
-<td colspan="8">
-هیچ کلاینتی وجود ندارد
-</td>
-
-</tr>
-
-{% endif %}
-
-
-</tbody>
-
 </table>
 
-
-<br>
-
-<a href="/admin/dashboard">
-← بازگشت به داشبورد
-</a>
+</body>
+</html>
