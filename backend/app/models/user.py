@@ -1,7 +1,7 @@
 """
 User ORM Model
 
-Represents panel administrators/users.
+Represents panel users.
 """
 
 from datetime import datetime
@@ -21,13 +21,14 @@ class User(Base):
     - JWT identity
     - Panel access control
     """
+
+    __tablename__ = "users"
+
     peers = relationship(
         "Peer",
         back_populates="user",
         cascade="all, delete-orphan",
     )
-
-    __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(
         Integer,

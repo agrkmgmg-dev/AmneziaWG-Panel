@@ -20,8 +20,10 @@ class BaseRepository(Generic[ModelType]):
         session: AsyncSession,
         model: type[ModelType],
     ) -> None:
+
         self.session = session
         self.model = model
+
 
     async def get_by_id(
         self,
@@ -39,7 +41,10 @@ class BaseRepository(Generic[ModelType]):
 
         return result.scalar_one_or_none()
 
-    async def get_all(self) -> list[ModelType]:
+
+    async def get_all(
+        self,
+    ) -> list[ModelType]:
         """
         Retrieve all objects.
         """
@@ -50,7 +55,10 @@ class BaseRepository(Generic[ModelType]):
 
         return list(result.scalars().all())
 
-    async def count(self) -> int:
+
+    async def count(
+        self,
+    ) -> int:
         """
         Return total records count.
         """
@@ -60,6 +68,7 @@ class BaseRepository(Generic[ModelType]):
         )
 
         return result.scalar_one()
+
 
     async def create(
         self,
@@ -71,11 +80,12 @@ class BaseRepository(Generic[ModelType]):
 
         self.session.add(obj)
 
-        await self.session.flush()
+        await self.session.commit()
 
         await self.session.refresh(obj)
 
         return obj
+
 
     async def delete(
         self,
@@ -87,4 +97,4 @@ class BaseRepository(Generic[ModelType]):
 
         await self.session.delete(obj)
 
-        await self.session.flush()
+        await self.session.commit()

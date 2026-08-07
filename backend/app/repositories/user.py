@@ -8,8 +8,6 @@ from backend.app.repositories.base import BaseRepository
 class UserRepository(BaseRepository[User]):
     """
     Repository for User model.
-
-    Contains user-specific database operations.
     """
 
     def __init__(
@@ -21,6 +19,17 @@ class UserRepository(BaseRepository[User]):
             model=User,
         )
 
+    async def get_all(self) -> list[User]:
+        """
+        Return all users ordered by ID.
+        """
+
+        result = await self.session.execute(
+            select(User).order_by(User.id)
+        )
+
+        return list(result.scalars().all())
+
     async def get_by_username(
         self,
         username: str,
@@ -28,7 +37,7 @@ class UserRepository(BaseRepository[User]):
         """
         Return user by username.
         """
-
+        ...
         result = await self.session.execute(
             select(User).where(User.username == username)
         )
