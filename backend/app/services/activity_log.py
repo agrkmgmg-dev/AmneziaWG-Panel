@@ -1,7 +1,7 @@
 """
-Activity log service layer.
+Activity Log service layer.
 
-Contains business logic related to user activity logs.
+Contains business logic related to activity logs.
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,27 +18,28 @@ from backend.app.services.base import BaseService
 
 class ActivityLogService(BaseService):
     """
-    Service class for ActivityLog operations.
+    Service class for Activity Log operations.
 
     Responsibilities:
         - Handle activity log business logic.
-        - Manage database transactions.
         - Coordinate with ActivityLogRepository.
-
-    Logging generation logic is intentionally
-    handled outside this service.
+        - Manage transactions.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+    ) -> None:
         """
         Initialize ActivityLogService.
-
-        Args:
-            session: Async SQLAlchemy database session.
         """
-        super().__init__(session)
 
-        self.repository = ActivityLogRepository(session)
+        repository = ActivityLogRepository(session)
+
+        super().__init__(
+            session,
+            repository,
+        )
 
     async def get_by_id(
         self,
@@ -46,33 +47,32 @@ class ActivityLogService(BaseService):
     ) -> ActivityLogResponse | None:
         """
         Get activity log by ID.
-
-        Args:
-            log_id: Activity log primary key.
-
-        Returns:
-            ActivityLogResponse if found, otherwise None.
         """
 
-        log = await self.repository.get_by_id(log_id)
+        log = await self.repository.get_by_id(
+            log_id
+        )
 
         if log is None:
             return None
 
-        return ActivityLogResponse.model_validate(log)
+        return ActivityLogResponse.model_validate(
+            log
+        )
 
-    async def get_all(self) -> list[ActivityLogResponse]:
+    async def get_all(
+        self,
+    ) -> list[ActivityLogResponse]:
         """
         Get all activity logs.
-
-        Returns:
-            List of activity logs.
         """
 
         logs = await self.repository.get_all()
 
         return [
-            ActivityLogResponse.model_validate(log)
+            ActivityLogResponse.model_validate(
+                log
+            )
             for log in logs
         ]
 
@@ -81,13 +81,7 @@ class ActivityLogService(BaseService):
         data: ActivityLogCreate,
     ) -> ActivityLogResponse:
         """
-        Create activity log record.
-
-        Args:
-            data: Activity log creation schema.
-
-        Returns:
-            Created activity log response schema.
+        Create activity log.
         """
 
         log = ActivityLog(
@@ -96,36 +90,39 @@ class ActivityLogService(BaseService):
             description=data.description,
         )
 
-        log = await self.repository.create(log)
+        log = await self.repository.create(
+            log
+        )
 
         await self.commit()
 
-        await self.refresh(log)
+        await self.refresh(
+            log
+        )
 
-        return ActivityLogResponse.model_validate(log)
+        return ActivityLogResponse.model_validate(
+            log
+        )
 
     async def delete(
         self,
         log_id: int,
     ) -> bool:
         """
-        Delete activity log by ID.
-
-        Args:
-            log_id: Activity log primary key.
-
-        Returns:
-            True if deleted, otherwise False.
+        Delete activity log.
         """
 
-        log = await self.repository.get_by_id(log_id)
+        log = await self.repository.get_by_id(
+            log_id
+        )
 
         if log is None:
             return False
 
-        await self.repository.delete(log)
+        await self.repository.delete(
+            log
+        )
 
         await self.commit()
 
         return True
-        

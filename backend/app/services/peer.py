@@ -26,16 +26,26 @@ class PeerService(BaseService):
     handled outside this service.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+    ) -> None:
         """
         Initialize PeerService.
 
         Args:
             session: Async SQLAlchemy database session.
         """
-        super().__init__(session)
 
-        self.repository = PeerRepository(session)
+        repository = PeerRepository(session)
+
+        super().__init__(
+            session,
+            repository,
+        )
+
+        self.repository = repository
+
 
     async def get_by_id(
         self,
@@ -43,27 +53,23 @@ class PeerService(BaseService):
     ) -> PeerResponse | None:
         """
         Get peer by ID.
-
-        Args:
-            peer_id: Peer primary key.
-
-        Returns:
-            PeerResponse if peer exists, otherwise None.
         """
 
-        peer = await self.repository.get_by_id(peer_id)
+        peer = await self.repository.get_by_id(
+            peer_id
+        )
 
         if peer is None:
             return None
 
         return PeerResponse.model_validate(peer)
 
-    async def get_all(self) -> list[PeerResponse]:
+
+    async def get_all(
+        self,
+    ) -> list[PeerResponse]:
         """
         Get all peers.
-
-        Returns:
-            List of peers.
         """
 
         peers = await self.repository.get_all()
@@ -73,18 +79,13 @@ class PeerService(BaseService):
             for peer in peers
         ]
 
+
     async def create(
         self,
         data: PeerCreate,
     ) -> PeerResponse:
         """
         Create new peer.
-
-        Args:
-            data: Peer creation schema.
-
-        Returns:
-            Created peer response schema.
         """
 
         peer = Peer(
@@ -93,13 +94,18 @@ class PeerService(BaseService):
             expires_at=data.expires_at,
         )
 
-        peer = await self.repository.create(peer)
+        peer = await self.repository.create(
+            peer
+        )
 
         await self.commit()
 
-        await self.refresh(peer)
+        await self.refresh(
+            peer
+        )
 
         return PeerResponse.model_validate(peer)
+
 
     async def delete(
         self,
@@ -107,20 +113,18 @@ class PeerService(BaseService):
     ) -> bool:
         """
         Delete peer by ID.
-
-        Args:
-            peer_id: Peer primary key.
-
-        Returns:
-            True if deleted, otherwise False.
         """
 
-        peer = await self.repository.get_by_id(peer_id)
+        peer = await self.repository.get_by_id(
+            peer_id
+        )
 
         if peer is None:
             return False
 
-        await self.repository.delete(peer)
+        await self.repository.delete(
+            peer
+        )
 
         await self.commit()
 

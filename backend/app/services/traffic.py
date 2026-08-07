@@ -1,18 +1,14 @@
 """
 Traffic service layer.
 
-Contains business logic related to peer traffic records
-and usage limit monitoring.
+Contains business logic related to traffic records.
 """
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.traffic import Traffic
 from backend.app.repositories.traffic import TrafficRepository
-from backend.app.schemas.traffic import (
-    TrafficCreate,
-    TrafficResponse,
-)
+from backend.app.schemas.traffic import TrafficCreate, TrafficResponse
 
 from backend.app.services.base import BaseService
 
@@ -23,15 +19,9 @@ class TrafficService(BaseService):
 
     Responsibilities:
         - Handle traffic business logic.
-        - Manage database transactions.
-        - Create traffic records.
-        - Calculate peer usage.
-        - Check usage limits.
+        - Coordinate with TrafficRepository.
+        - Manage transactions.
     """
-
-
-    WARNING_PERCENT = 80
-
 
     def __init__(
         self,
@@ -41,14 +31,12 @@ class TrafficService(BaseService):
         Initialize TrafficService.
         """
 
+        repository = TrafficRepository(session)
+
         super().__init__(
-            session
+            session,
+            repository,
         )
-
-        self.repository = TrafficRepository(
-            session
-        )
-
 
     async def get_by_id(
         self,
@@ -69,7 +57,6 @@ class TrafficService(BaseService):
             traffic
         )
 
-
     async def get_all(
         self,
     ) -> list[TrafficResponse]:
@@ -77,15 +64,14 @@ class TrafficService(BaseService):
         Get all traffic records.
         """
 
-        traffics = await self.repository.get_all()
+        records = await self.repository.get_all()
 
         return [
             TrafficResponse.model_validate(
-                traffic
+                record
             )
-            for traffic in traffics
+            for record in records
         ]
-
 
     async def create(
         self,
@@ -97,15 +83,9 @@ class TrafficService(BaseService):
 
         traffic = Traffic(
             peer_id=data.peer_id,
-            upload_bytes=data.upload_bytes,
             download_bytes=data.download_bytes,
-            total_bytes=(
-                data.upload_bytes
-                +
-                data.download_bytes
-            ),
+            upload_bytes=data.upload_bytes,
         )
-
 
         traffic = await self.repository.create(
             traffic
@@ -121,52 +101,40 @@ class TrafficService(BaseService):
             traffic
         )
 
+    async def delete(
+        self,
+        traffic_id: int,
+    ) -> bool:
+        """
+        Delete traffic record.
+        """
+
+        traffic = await self.repository.get_by_id(
+            traffic_id
+        )
+
+        if traffic is None:
+            return False
+
+        await self.repository.delete(
+            traffic
+        )
+
+        await self.commit()
+
+        return True
 
     async def get_usage(
         self,
         peer_id: int,
     ) -> dict:
         """
-        Return total peer usage.
+        Return peer traffic usage.
         """
 
-        upload = await self.repository.get_total_upload(
+        return await self.repository.get_usage(
             peer_id
         )
-
-        download = await self.repository.get_total_download(
-            peer_id
-        )
-
-        total = upload + download
-
-
-        return {
-            "peer_id": peer_id,
-
-            "upload_bytes": upload,
-
-            "download_bytes": download,
-
-            "total_bytes": total,
-
-            "upload_mb": round(
-                upload / 1024 / 1024,
-                2,
-            ),
-
-            "download_mb": round(
-                download / 1024 / 1024,
-                2,
-            ),
-
-            "total_mb": round(
-                total / 1024 / 1024,
-                2,
-            ),
-        }
-
-
 
     async def check_limit(
         self,
@@ -174,74 +142,10 @@ class TrafficService(BaseService):
         limit_bytes: int,
     ) -> dict:
         """
-        Check traffic usage limit.
+        Check peer traffic limit.
         """
 
-        usage = await self.get_usage(
-            peer_id
+        return await self.repository.check_limit(
+            peer_id,
+            limit_bytes,
         )
-
-        used = usage["total_bytes"]
-
-
-        if used >= limit_bytes:
-
-            status = "EXCEEDED"
-
-
-        elif used >= (
-            limit_bytes
-            *
-            self.WARNING_PERCENT
-            /
-            100
-        ):
-
-            status = "WARNING"
-
-
-        else:
-
-            status = "OK"
-
-
-        return {
-            **usage,
-
-            "limit_bytes": limit_bytes,
-
-            "remaining_bytes": max(
-                limit_bytes - used,
-                0,
-            ),
-
-            "status": status,
-        }
-
-
-
-    async def delete(
-        self,
-        traffic_id: int,
-    ) -> bool:
-        """
-        Delete traffic record by ID.
-        """
-
-        traffic = await self.repository.get_by_id(
-            traffic_id
-        )
-
-
-        if traffic is None:
-            return False
-
-
-        await self.repository.delete(
-            traffic
-        )
-
-
-        await self.commit()
-
-        return True
