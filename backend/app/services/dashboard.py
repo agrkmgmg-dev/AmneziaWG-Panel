@@ -11,6 +11,7 @@ from backend.app.repositories.user import UserRepository
 from backend.app.repositories.peer import PeerRepository
 from backend.app.repositories.traffic import TrafficRepository
 from backend.app.repositories.activity_log import ActivityLogRepository
+from backend.app.services.ip_pool import IPPoolService
 
 
 class DashboardService:
@@ -22,6 +23,7 @@ class DashboardService:
         self,
         session: AsyncSession,
     ) -> None:
+
         self.user_repository = UserRepository(session)
         self.peer_repository = PeerRepository(session)
         self.traffic_repository = TrafficRepository(session)
@@ -78,10 +80,28 @@ class DashboardService:
         Return dashboard statistics and recent logs.
         """
 
+        peers = await self.peer_repository.get_all()
+
+        used_ips = [
+            peer.address
+            for peer in peers
+            if peer.address
+        ]
+
+        pool = IPPoolService(
+            subnet="10.0.0.0/24",
+            server_ip="10.0.0.1",
+        )
+
+        ip_stats = pool.get_statistics(
+            used_ips
+        )
+
         return {
             "users_count": await self.get_users_count(),
             "peers_count": await self.get_peers_count(),
             "traffic_count": await self.get_traffic_count(),
             "logs_count": await self.get_logs_count(),
             "recent_logs": await self.get_recent_logs(),
+            "ip_pool": ip_stats,
         }

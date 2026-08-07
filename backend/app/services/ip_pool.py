@@ -70,3 +70,25 @@ class IPPoolService:
             )
 
         return available[0]
+
+
+    def get_statistics(
+        self,
+        used_ips: list[str],
+    ) -> dict:
+        """
+        Return IP pool statistics.
+        """
+
+        total = self.network.num_addresses - 2
+
+        used = len(used_ips)
+
+        available = total - used
+
+        return {
+            "subnet": str(self.network),
+            "total": total,
+            "used": used,
+            "available": available,
+        }
