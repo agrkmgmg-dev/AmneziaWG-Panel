@@ -9,7 +9,12 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from backend.app.admin import router as admin_router
-from backend.app.api.v1 import api_router
+
+from backend.app.api.v1.router import (
+    api_router,
+    register_routers,
+)
+
 from backend.app.core.config import settings
 from backend.app.scheduler.traffic_scheduler import TrafficScheduler
 
@@ -69,6 +74,10 @@ def create_application() -> FastAPI:
         ),
         name="static",
     )
+
+
+    # Register API v1 routes
+    register_routers()
 
 
     # API routes

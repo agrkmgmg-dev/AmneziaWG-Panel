@@ -9,7 +9,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from backend.app.core.security import hash_password
 from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
-from backend.app.schemas.user import UserCreate, UserResponse
+from backend.app.schemas.user import (
+    UserCreate,
+    UserResponse,
+)
 
 from backend.app.services.base import BaseService
 
@@ -28,16 +31,29 @@ class UserService(BaseService):
     are intentionally not handled here.
     """
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(
+        self,
+        session: AsyncSession,
+    ) -> None:
         """
         Initialize UserService.
 
         Args:
-            session: Async SQLAlchemy database session.
+            session:
+                Async SQLAlchemy database session.
         """
-        super().__init__(session)
 
-        self.repository = UserRepository(session)
+        repository = UserRepository(
+            session
+        )
+
+        super().__init__(
+            session=session,
+            repository=repository,
+        )
+
+        self.repository = repository
+
 
     async def get_by_id(
         self,
@@ -45,27 +61,25 @@ class UserService(BaseService):
     ) -> UserResponse | None:
         """
         Get user by ID.
-
-        Args:
-            user_id: User primary key.
-
-        Returns:
-            UserResponse if user exists, otherwise None.
         """
 
-        user = await self.repository.get_by_id(user_id)
+        user = await self.repository.get_by_id(
+            user_id
+        )
 
         if user is None:
             return None
 
-        return UserResponse.model_validate(user)
+        return UserResponse.model_validate(
+            user
+        )
 
-    async def get_all(self) -> list[UserResponse]:
+
+    async def get_all(
+        self,
+    ) -> list[UserResponse]:
         """
         Get all users.
-
-        Returns:
-            List of users.
         """
 
         users = await self.repository.get_all()
@@ -75,6 +89,7 @@ class UserService(BaseService):
             for user in users
         ]
 
+
     async def create(
         self,
         data: UserCreate,
@@ -83,26 +98,29 @@ class UserService(BaseService):
         Create new user.
 
         Password is hashed before storing.
-
-        Args:
-            data: User creation schema.
-
-        Returns:
-            Created user response schema.
         """
 
         user = User(
             username=data.username,
-            hashed_password=hash_password(data.password),
+            hashed_password=hash_password(
+                data.password
+            ),
         )
 
-        user = await self.repository.create(user)
+        user = await self.repository.create(
+            user
+        )
 
         await self.commit()
 
-        await self.refresh(user)
+        await self.refresh(
+            user
+        )
 
-        return UserResponse.model_validate(user)
+        return UserResponse.model_validate(
+            user
+        )
+
 
     async def delete(
         self,
@@ -110,20 +128,18 @@ class UserService(BaseService):
     ) -> bool:
         """
         Delete user by ID.
-
-        Args:
-            user_id: User primary key.
-
-        Returns:
-            True if deleted, otherwise False.
         """
 
-        user = await self.repository.get_by_id(user_id)
+        user = await self.repository.get_by_id(
+            user_id
+        )
 
         if user is None:
             return False
 
-        await self.repository.delete(user)
+        await self.repository.delete(
+            user
+        )
 
         await self.commit()
 
