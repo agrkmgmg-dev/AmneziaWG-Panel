@@ -13,9 +13,19 @@ from backend.app.api.dependencies import (
     get_auth_service,
 )
 
+from backend.app.core.dependencies import (
+    get_current_user,
+)
+
+from backend.app.models.user import User
+
 from backend.app.schemas.auth import (
     LoginRequest,
     TokenResponse,
+)
+
+from backend.app.schemas.user import (
+    UserResponse,
 )
 
 from backend.app.services.auth import (
@@ -52,8 +62,31 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
         )
 
-    return service.create_tokens(
-        user.id
+    return TokenResponse(
+        **service.create_tokens(
+            user.id
+        )
+    )
+
+
+@router.get(
+    "/me",
+    response_model=UserResponse,
+)
+async def get_current_user_profile(
+    user: User = Depends(
+        get_current_user
+    ),
+) -> UserResponse:
+    """
+    Get current authenticated user.
+    """
+
+    return UserResponse.model_validate(
+        user
     )
