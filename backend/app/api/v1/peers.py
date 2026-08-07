@@ -1,6 +1,17 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+"""
+Peer API endpoints.
+"""
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 
 from backend.app.api.dependencies import get_peer_service
+from backend.app.core.dependencies import require_active_user
+from backend.app.models.user import User
 from backend.app.schemas.peer import PeerResponse
 from backend.app.services.peer import PeerService
 
@@ -16,6 +27,7 @@ router = APIRouter(
     response_model=list[PeerResponse],
 )
 async def get_peers(
+    current_user: User = Depends(require_active_user),
     service: PeerService = Depends(get_peer_service),
 ) -> list[PeerResponse]:
     """
@@ -25,19 +37,23 @@ async def get_peers(
     return await service.get_all()
 
 
+
 @router.get(
     "/{peer_id}",
     response_model=PeerResponse,
 )
 async def get_peer(
     peer_id: int,
+    current_user: User = Depends(require_active_user),
     service: PeerService = Depends(get_peer_service),
 ) -> PeerResponse:
     """
     Get peer by ID.
     """
 
-    peer = await service.get_by_id(peer_id)
+    peer = await service.get_by_id(
+        peer_id
+    )
 
     if peer is None:
         raise HTTPException(
@@ -48,19 +64,23 @@ async def get_peer(
     return peer
 
 
+
 @router.delete(
     "/{peer_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 async def delete_peer(
     peer_id: int,
+    current_user: User = Depends(require_active_user),
     service: PeerService = Depends(get_peer_service),
 ) -> None:
     """
     Delete peer by ID.
     """
 
-    deleted = await service.delete(peer_id)
+    deleted = await service.delete(
+        peer_id
+    )
 
     if not deleted:
         raise HTTPException(
