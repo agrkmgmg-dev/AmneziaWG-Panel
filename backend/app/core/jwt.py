@@ -2,15 +2,24 @@
 JWT authentication utilities.
 
 Provides:
+
 - Access token creation
 - Refresh token creation
 - Token decoding and validation
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import (
+    datetime,
+    timedelta,
+    timezone,
+)
 from typing import Any
 
 import jwt
+from jwt.exceptions import (
+    ExpiredSignatureError,
+    InvalidTokenError,
+)
 
 from backend.app.core.config import settings
 
@@ -80,16 +89,51 @@ def create_refresh_token(
     )
 
 
-def decode_token(token: str) -> dict[str, Any]:
+def decode_token(
+    token: str,
+) -> dict[str, Any] | None:
     """
-    Decode and validate a JWT token.
+    Decode and validate JWT token.
 
-    Raises:
-        jwt.InvalidTokenError: If token is invalid or expired.
+    Returns:
+        Token payload if valid.
+        None if invalid or expired.
     """
 
-    return jwt.decode(
-        token,
-        settings.SECRET_KEY,
-        algorithms=[ALGORITHM],
-    )
+    try:
+        payload = jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[
+                ALGORITHM
+            ],
+        )
+
+        return payload
+
+    except (
+        ExpiredSignatureError,
+        InvalidTokenError,
+    ):
+        return None
+
+
+def verify_token_type(
+    payload: dict[str, Any],
+    token_type: str,
+) -> bool:
+    """
+    Verify JWT token type.
+
+    Args:
+        payload:
+            Decoded JWT payload.
+
+        token_type:
+            Expected token type.
+
+    Returns:
+        True if token type matches.
+    """
+
+    return payload.get("type") == token_type

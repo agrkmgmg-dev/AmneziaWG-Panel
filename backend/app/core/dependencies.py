@@ -2,6 +2,7 @@
 Authentication dependencies.
 
 Provides:
+
 - Current authenticated user
 - Active user validation
 """
@@ -26,7 +27,7 @@ async def get_current_user(
     session: AsyncSession = Depends(get_db),
 ) -> User:
     """
-    Get current authenticated user from JWT.
+    Get current authenticated user from JWT token.
     """
 
     payload = decode_token(token)
@@ -35,6 +36,9 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authentication token",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
         )
 
     user_id = payload.get("sub")
@@ -43,18 +47,36 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
+        )
+
+    try:
+        user_id = int(user_id)
+
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user id",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
         )
 
     repository = UserRepository(session)
 
     user = await repository.get_by_id(
-        int(user_id)
+        user_id
     )
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
         )
 
     return user
@@ -64,7 +86,7 @@ async def require_active_user(
     user: User = Depends(get_current_user),
 ) -> User:
     """
-    Ensure user account is active.
+    Ensure authenticated user is active.
     """
 
     if not user.is_active:
