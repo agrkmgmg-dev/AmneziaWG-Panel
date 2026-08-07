@@ -5,16 +5,21 @@ Admin peer service.
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.peer import Peer
+
 from backend.app.repositories.peer import PeerRepository
+from backend.app.repositories.traffic import TrafficRepository
+
 from backend.app.services.ip_manager import IPManagerService
 from backend.app.services.key_generator import KeyGeneratorService
 from backend.app.services.expiration import ExpirationService
+from backend.app.services.usage_limit import UsageLimitService
 
 
 class AdminPeerService:
     """
     Service for admin peer management.
     """
+
 
     def __init__(
         self,
@@ -25,20 +30,50 @@ class AdminPeerService:
             session
         )
 
+        self.usage_service = UsageLimitService(
+            TrafficRepository(session)
+        )
+
+
+    async def _attach_status(
+        self,
+        peer: Peer,
+    ) -> Peer:
+        """
+        Attach calculated statuses.
+        """
+
+        peer.status = ExpirationService.get_status(
+            peer
+        )
+
+        peer.usage_status = await self.usage_service.get_status(
+            peer
+        )
+
+        peer.usage_display = await self.usage_service.get_display(
+            peer
+        )
+
+        return peer
+
 
     async def get_peers(
         self,
     ) -> list[Peer]:
         """
-        Return all peers with expiration status.
+        Return all peers with status.
         """
 
         peers = await self.peer_repository.get_all_with_users()
 
+
         for peer in peers:
-            peer.status = ExpirationService.get_status(
+
+            await self._attach_status(
                 peer
             )
+
 
         return peers
 
@@ -55,10 +90,13 @@ class AdminPeerService:
             peer_id
         )
 
+
         if peer:
-            peer.status = ExpirationService.get_status(
+
+            await self._attach_status(
                 peer
             )
+
 
         return peer
 
@@ -68,6 +106,7 @@ class AdminPeerService:
         user_id: int,
         name: str,
         expires_at=None,
+        traffic_limit_bytes=None,
     ) -> Peer:
         """
         Create peer with automatic keys and IP.
@@ -79,9 +118,11 @@ class AdminPeerService:
             self.peer_repository
         )
 
+
         private_key, public_key = (
             key_service.generate_keypair()
         )
+
 
         address = await ip_service.get_next_ip()
 
@@ -93,6 +134,7 @@ class AdminPeerService:
             private_key=private_key,
             address=address,
             expires_at=expires_at,
+            traffic_limit_bytes=traffic_limit_bytes,
             is_active=True,
         )
 
@@ -114,6 +156,7 @@ class AdminPeerService:
             peer_id
         )
 
+
         if peer is None:
             return False
 
@@ -121,5 +164,6 @@ class AdminPeerService:
         await self.peer_repository.delete(
             peer
         )
+
 
         return True

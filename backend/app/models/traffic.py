@@ -1,3 +1,7 @@
+"""
+Traffic database model.
+"""
+
 from datetime import datetime
 
 from sqlalchemy import (
@@ -18,6 +22,9 @@ from backend.app.db.base import Base
 
 
 class Traffic(Base):
+    """
+    Store peer traffic usage records.
+    """
 
     __tablename__ = "traffic"
 
@@ -48,6 +55,13 @@ class Traffic(Base):
 
 
     download_bytes: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        default=0,
+    )
+
+
+    total_bytes: Mapped[int] = mapped_column(
         BigInteger,
         nullable=False,
         default=0,
