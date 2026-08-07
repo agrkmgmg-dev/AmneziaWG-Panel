@@ -1,7 +1,21 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+"""
+User API endpoints.
+"""
+
+from fastapi import (
+    APIRouter,
+    Depends,
+    HTTPException,
+    status,
+)
 
 from backend.app.api.dependencies import get_user_service
-from backend.app.schemas.user import UserCreate, UserResponse
+from backend.app.core.dependencies import require_active_user
+from backend.app.models.user import User
+from backend.app.schemas.user import (
+    UserCreate,
+    UserResponse,
+)
 from backend.app.services.user import UserService
 
 
@@ -16,6 +30,7 @@ router = APIRouter(
     response_model=list[UserResponse],
 )
 async def get_users(
+    current_user: User = Depends(require_active_user),
     service: UserService = Depends(get_user_service),
 ) -> list[UserResponse]:
     """
@@ -25,19 +40,23 @@ async def get_users(
     return await service.get_all()
 
 
+
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
 )
 async def get_user(
     user_id: int,
+    current_user: User = Depends(require_active_user),
     service: UserService = Depends(get_user_service),
 ) -> UserResponse:
     """
     Get user by ID.
     """
 
-    user = await service.get_by_id(user_id)
+    user = await service.get_by_id(
+        user_id
+    )
 
     if user is None:
         raise HTTPException(
@@ -48,6 +67,7 @@ async def get_user(
     return user
 
 
+
 @router.post(
     "",
     response_model=UserResponse,
@@ -55,13 +75,17 @@ async def get_user(
 )
 async def create_user(
     data: UserCreate,
+    current_user: User = Depends(require_active_user),
     service: UserService = Depends(get_user_service),
 ) -> UserResponse:
     """
     Create new user.
     """
 
-    return await service.create(data)
+    return await service.create(
+        data
+    )
+
 
 
 @router.delete(
@@ -70,13 +94,16 @@ async def create_user(
 )
 async def delete_user(
     user_id: int,
+    current_user: User = Depends(require_active_user),
     service: UserService = Depends(get_user_service),
 ) -> None:
     """
     Delete user by ID.
     """
 
-    deleted = await service.delete(user_id)
+    deleted = await service.delete(
+        user_id
+    )
 
     if not deleted:
         raise HTTPException(
