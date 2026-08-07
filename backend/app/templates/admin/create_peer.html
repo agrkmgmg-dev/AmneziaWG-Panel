@@ -1,0 +1,58 @@
+<h2>➕ ایجاد کلاینت جدید AmneziaWG</h2>
+
+<form method="post">
+
+    <label>نام کلاینت</label>
+    <input
+        type="text"
+        name="name"
+        required
+    >
+
+    <label>User ID</label>
+    <input
+        type="number"
+        name="user_id"
+        required
+    >
+
+    <label>Public Key</label>
+    <input
+        type="text"
+        name="public_key"
+        required
+    >
+
+    <label>Private Key</label>
+    <input
+        type="text"
+        name="private_key"
+    >
+
+    <label>Address</label>
+    <input
+        type="text"
+        name="address"
+        placeholder="10.0.0.2/32"
+        required
+    >
+
+    <label>تاریخ انقضا</label>
+    <input
+        type="datetime-local"
+        name="expires_at"
+    >
+
+    <br><br>
+
+    <button type="submit">
+        ذخیره کلاینت
+    </button>
+
+</form>
+
+<br>
+
+<a href="/admin/peers">
+    ← بازگشت
+</a>

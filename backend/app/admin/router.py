@@ -15,8 +15,8 @@ from backend.app.admin.auth import (
 from backend.app.db.database import get_db
 from backend.app.services.admin_user import AdminUserService
 from backend.app.services.dashboard import DashboardService
-
-
+from backend.app.services.admin_peer import AdminPeerService
+from backend.app.services.admin_peer import AdminPeerService
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
@@ -49,7 +49,14 @@ async def get_admin_user_service(
     """
 
     return AdminUserService(session)
+async def get_admin_peer_service(
+    session: AsyncSession = Depends(get_db),
+) -> AdminPeerService:
+    """
+    Provide AdminPeerService instance.
+    """
 
+    return AdminPeerService(session)
 
 # =====================================================
 # Login Page
@@ -176,7 +183,152 @@ async def users(
             "users": users,
         },
     )
+# =====================================================
+# Peers
+# =====================================================
 
+@router.get(
+    "/peers",
+    response_class=HTMLResponse,
+)
+async def peers(
+    request: Request,
+    service: AdminPeerService = Depends(get_admin_peer_service),
+) -> HTMLResponse:
+    """
+    Render peers management page.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    peers = await service.get_peers()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/peers.html",
+        context={
+            "request": request,
+            "peers": peers,
+        },
+    )
+@router.get(
+    "/peers/create",
+    response_class=HTMLResponse,
+)
+async def create_peer_page(
+    request: Request,
+) -> HTMLResponse:
+    """
+    Render create peer form.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/create_peer.html",
+        context={
+            "request": request,
+        },
+    )
+@router.post(
+    "/peers/create",
+)
+async def create_peer(
+    request: Request,
+    user_id: int = Form(...),
+    name: str = Form(...),
+    public_key: str = Form(...),
+    address: str = Form(...),
+    private_key: str | None = Form(None),
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    """
+    Create new peer.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    await service.create_peer(
+        user_id=user_id,
+        name=name,
+        public_key=public_key,
+        address=address,
+        private_key=private_key,
+    )
+
+    return RedirectResponse(
+        url="/admin/peers",
+        status_code=302,
+    )
+@router.get(
+    "/peers/{peer_id}/delete",
+)
+async def delete_peer(
+    peer_id: int,
+    request: Request,
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    """
+    Delete peer.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    await service.delete_peer(
+        peer_id
+    )
+
+    return RedirectResponse(
+        url="/admin/peers",
+        status_code=302,
+    )
+# =====================================================
+# Delete Peer
+# =====================================================
+
+@router.get(
+    "/peers/{peer_id}/delete",
+)
+async def delete_peer(
+    peer_id: int,
+    request: Request,
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    """
+    Delete peer.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    await service.delete_peer(
+        peer_id
+    )
+
+    return RedirectResponse(
+        url="/admin/peers",
+        status_code=302,
+    )
 # =====================================================
 # Logout
 # =====================================================
