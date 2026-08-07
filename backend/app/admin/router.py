@@ -2,8 +2,15 @@
 Admin dashboard and authentication router.
 """
 
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    RedirectResponse,
+    Response,
+)
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,14 +19,11 @@ from backend.app.admin.auth import (
     login_admin,
     logout_admin,
 )
-
 from backend.app.db.database import get_db
-from backend.app.services.admin_user import AdminUserService
-from backend.app.services.dashboard import DashboardService
 from backend.app.services.admin_peer import AdminPeerService
+from backend.app.services.admin_user import AdminUserService
 from backend.app.services.config_generator import ConfigGeneratorService
-
-
+from backend.app.services.dashboard import DashboardService
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
@@ -317,7 +321,6 @@ async def create_user(
 # Peers
 # =====================================================
 
-
 @router.get(
     "/peers",
     response_class=HTMLResponse,
@@ -329,8 +332,13 @@ async def peers(
     ),
 ):
 
-    peers = await service.get_peers()
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
 
+    peers = await service.get_peers()
 
     return templates.TemplateResponse(
         request=request,
@@ -341,7 +349,6 @@ async def peers(
         },
     )
 
-
 @router.get(
     "/peers/create",
     response_class=HTMLResponse,
@@ -350,6 +357,12 @@ async def create_peer_page(
     request: Request,
 ):
 
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="admin/create_peer.html",
@@ -357,36 +370,34 @@ async def create_peer_page(
             "request": request,
         },
     )
-
-
 @router.post("/peers/create")
 async def create_peer(
     request: Request,
     user_id: int = Form(...),
     name: str = Form(...),
-    public_key: str = Form(...),
-    address: str = Form(...),
-    private_key: str | None = Form(None),
+    expires_at: str | None = Form(None),
     service: AdminPeerService = Depends(
         get_admin_peer_service
     ),
 ):
 
+    if expires_at:
+        expires_at = datetime.fromisoformat(
+            expires_at
+        )
+    else:
+        expires_at = None
+
     await service.create_peer(
         user_id=user_id,
         name=name,
-        public_key=public_key,
-        private_key=private_key,
-        address=address,
+        expires_at=expires_at,
     )
-
 
     return RedirectResponse(
         url="/admin/peers",
         status_code=302,
     )
-
-
 @router.get("/peers/{peer_id}/delete")
 async def delete_peer(
     peer_id: int,
@@ -396,14 +407,18 @@ async def delete_peer(
     ),
 ):
 
-    await service.delete_peer(peer_id)
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
 
+    await service.delete_peer(peer_id)
 
     return RedirectResponse(
         url="/admin/peers",
         status_code=302,
     )
-
 
 # =====================================================
 # Logout
@@ -420,4 +435,42 @@ async def logout(
     return RedirectResponse(
         url="/admin/login",
         status_code=302,
+    )
+@router.get(
+    "/peers/{peer_id}/qr",
+)
+async def download_peer_qr(
+    peer_id: int,
+    request: Request,
+    peer_service: AdminPeerService = Depends(
+        get_admin_peer_service
+    ),
+    config_service: ConfigGeneratorService = Depends(
+        get_config_service
+    ),
+):
+    """
+    Download peer QR code.
+    """
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    peer = await peer_service.get_peer(peer_id)
+
+    if not peer:
+        return RedirectResponse(
+            url="/admin/peers",
+            status_code=302,
+        )
+
+    qr_path = config_service.generate_qr(peer)
+
+    return FileResponse(
+        qr_path,
+        media_type="image/png",
+        filename=f"{peer.name}.png",
     )

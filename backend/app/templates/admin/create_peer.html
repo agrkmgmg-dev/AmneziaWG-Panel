@@ -1,48 +1,46 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>ایجاد کلاینت جدید AmneziaWG</title>
+</head>
+
+<body>
+
 <h2>➕ ایجاد کلاینت جدید AmneziaWG</h2>
 
-<form method="post">
+<form action="/admin/peers/create" method="post">
 
-    <label>نام کلاینت</label>
+    <label>نام کلاینت</label><br>
     <input
         type="text"
         name="name"
         required
     >
+    <br><br>
 
-    <label>User ID</label>
+    <label>User ID</label><br>
     <input
         type="number"
         name="user_id"
         required
     >
+    <br><br>
 
-    <label>Public Key</label>
-    <input
-        type="text"
-        name="public_key"
-        required
-    >
-
-    <label>Private Key</label>
-    <input
-        type="text"
-        name="private_key"
-    >
-
-    <label>Address</label>
+    <label>Address</label><br>
     <input
         type="text"
         name="address"
         placeholder="10.0.0.2/32"
         required
     >
+    <br><br>
 
-    <label>تاریخ انقضا</label>
+    <label>تاریخ انقضا</label><br>
     <input
         type="datetime-local"
         name="expires_at"
     >
-
     <br><br>
 
     <button type="submit">
@@ -56,3 +54,6 @@
 <a href="/admin/peers">
     ← بازگشت
 </a>
+
+</body>
+</html>

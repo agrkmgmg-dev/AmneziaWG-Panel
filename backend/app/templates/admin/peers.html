@@ -1,51 +1,81 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa">
+
 <head>
-    <title>Peers</title>
+    <meta charset="UTF-8">
+    <title>AmneziaWG Peers</title>
 </head>
 
 <body>
 
 <h2>🔑 کلاینت‌های AmneziaWG</h2>
 
-<table border="1">
+<p>
+    <a href="/admin/peers/create">➕ ایجاد کلاینت جدید</a>
+</p>
 
-<tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>IP</th>
-    <th>Action</th>
-</tr>
+<table border="1" cellpadding="8" cellspacing="0">
 
+    <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>IP</th>
+        <th>Action</th>
+    </tr>
 
-{% for peer in peers %}
+    {% if peers %}
 
-<tr>
+        {% for peer in peers %}
 
-<td>
-{{ peer.id }}
-</td>
+        <tr>
 
-<td>
-{{ peer.name }}
-</td>
+            <td>{{ peer.id }}</td>
 
-<td>
-{{ peer.address }}
-</td>
+            <td>{{ peer.name }}</td>
 
-<td>
-<a href="/admin/peers/{{ peer.id }}/config">
-⬇️ کانفیگ
-</a>
-</td>
+            <td>{{ peer.address }}</td>
 
-</tr>
+            <td>
 
-{% endfor %}
+                <a href="/admin/peers/{{ peer.id }}/config">
+                    ⬇️ کانفیگ
+                </a>
 
+                |
+
+                <a href="/admin/peers/{{ peer.id }}/qr">
+                    📱 QR
+                </a>
+
+                |
+
+                <a href="/admin/peers/{{ peer.id }}/delete">
+                    🗑 حذف
+                </a>
+
+            </td>
+
+        </tr>
+
+        {% endfor %}
+
+    {% else %}
+
+        <tr>
+            <td colspan="4">
+                هیچ کلاینتی وجود ندارد
+            </td>
+        </tr>
+
+    {% endif %}
 
 </table>
+
+<br>
+
+<a href="/admin/dashboard">
+    ← بازگشت به داشبورد
+</a>
 
 </body>
 </html>
