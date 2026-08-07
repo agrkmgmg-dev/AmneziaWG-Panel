@@ -1,41 +1,41 @@
 """
-Automatic IP Address Manager.
+IP Manager Service.
 """
 
-from ipaddress import IPv4Address
-
-from backend.app.repositories.peer import PeerRepository
+from backend.app.services.ip_pool import IPPoolService
 
 
 class IPManagerService:
     """
-    Allocate the first available WireGuard client IP.
+    Manage peer IP allocation.
     """
 
     def __init__(
         self,
-        peer_repository: PeerRepository,
+        peer_repository,
     ) -> None:
+
         self.peer_repository = peer_repository
+
+        self.pool = IPPoolService(
+            subnet="10.0.0.0/24",
+            server_ip="10.0.0.1",
+        )
+
 
     async def get_next_ip(self) -> str:
         """
-        Return first free IP from 10.0.0.2/32
+        Return next available IP.
         """
 
         peers = await self.peer_repository.get_all()
 
-        used = set()
+        used_ips = [
+            peer.address
+            for peer in peers
+            if peer.address
+        ]
 
-        for peer in peers:
-            if peer.address:
-                ip = peer.address.split("/")[0]
-                used.add(ip)
-
-        for i in range(2, 255):
-            ip = f"10.0.0.{i}"
-
-            if ip not in used:
-                return f"{ip}/32"
-
-        raise ValueError("No free IP addresses available.")
+        return self.pool.get_next_ip(
+            used_ips
+        )
