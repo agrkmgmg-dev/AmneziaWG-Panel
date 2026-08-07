@@ -7,7 +7,10 @@ for JWT authentication flow.
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import (
+    BaseModel,
+    Field,
+)
 
 
 class LoginRequest(BaseModel):
@@ -27,6 +30,17 @@ class LoginRequest(BaseModel):
     )
 
 
+class RefreshTokenRequest(BaseModel):
+    """
+    Refresh token request.
+    """
+
+    refresh_token: str = Field(
+        ...,
+        min_length=10,
+    )
+
+
 class TokenResponse(BaseModel):
     """
     JWT token response.
@@ -37,14 +51,6 @@ class TokenResponse(BaseModel):
     refresh_token: str
 
     token_type: str = "bearer"
-
-
-class RefreshTokenRequest(BaseModel):
-    """
-    Refresh token request.
-    """
-
-    refresh_token: str
 
 
 class CurrentUserResponse(BaseModel):
