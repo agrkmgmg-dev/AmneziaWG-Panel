@@ -1,6 +1,13 @@
 """
 Authentication API router.
+
+Provides:
+- User login
+- Refresh token
+- Current authenticated user
 """
+
+import jwt
 
 from fastapi import (
     APIRouter,
@@ -15,17 +22,18 @@ from backend.app.api.dependencies import (
 
 from backend.app.core.dependencies import (
     get_current_user,
+    require_active_user,
 )
 
-from backend.app.models.user import User
+from backend.app.core.jwt import (
+    decode_token,
+)
 
 from backend.app.schemas.auth import (
+    CurrentUserResponse,
     LoginRequest,
+    RefreshTokenRequest,
     TokenResponse,
-)
-
-from backend.app.schemas.user import (
-    UserResponse,
 )
 
 from backend.app.services.auth import (
@@ -45,9 +53,7 @@ router = APIRouter(
 )
 async def login(
     data: LoginRequest,
-    service: AuthService = Depends(
-        get_auth_service
-    ),
+    service: AuthService = Depends(get_auth_service),
 ) -> TokenResponse:
     """
     Authenticate user and return JWT tokens.
@@ -62,31 +68,94 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid username or password",
-            headers={
-                "WWW-Authenticate": "Bearer",
-            },
         )
 
     return TokenResponse(
-        **service.create_tokens(
-            user.id
+        **service.create_tokens(user.id)
+    )
+
+
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+)
+async def refresh_token(
+    data: RefreshTokenRequest,
+    service: AuthService = Depends(get_auth_service),
+) -> TokenResponse:
+    """
+    Create new access and refresh tokens
+    using a valid refresh token.
+    """
+
+    try:
+        payload = decode_token(
+            data.refresh_token
         )
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        ) from None
+
+    token_type = payload.get("type")
+
+    if token_type != "refresh":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token type",
+        )
+
+    subject = payload.get("sub")
+
+    if subject is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    try:
+        user_id = int(subject)
+
+    except (TypeError, ValueError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token subject",
+        ) from None
+
+    user = await service.repository.get_by_id(
+        user_id
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+
+    return TokenResponse(
+        **service.create_tokens(user.id)
     )
 
 
 @router.get(
     "/me",
-    response_model=UserResponse,
+    response_model=CurrentUserResponse,
 )
-async def get_current_user_profile(
-    user: User = Depends(
-        get_current_user
-    ),
-) -> UserResponse:
+async def get_me(
+    user=Depends(require_active_user),
+) -> CurrentUserResponse:
     """
-    Get current authenticated user.
+    Return the currently authenticated user.
     """
 
-    return UserResponse.model_validate(
+    return CurrentUserResponse.model_validate(
         user
     )
