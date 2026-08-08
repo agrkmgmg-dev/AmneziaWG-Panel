@@ -17,12 +17,17 @@ class KeyGeneratorService:
         """
         Generate a private key using `wg genkey`.
         """
-        result = subprocess.run(
-            ["wg", "genkey"],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        try:
+            result = subprocess.run(
+                ["wg", "genkey"],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(
+                "Failed to generate WireGuard private key."
+            ) from exc
 
         return result.stdout.strip()
 
@@ -33,13 +38,18 @@ class KeyGeneratorService:
         """
         Generate a public key from a private key.
         """
-        result = subprocess.run(
-            ["wg", "pubkey"],
-            input=private_key,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        try:
+            result = subprocess.run(
+                ["wg", "pubkey"],
+                input=private_key,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+        except subprocess.CalledProcessError as exc:
+            raise RuntimeError(
+                "Failed to generate WireGuard public key."
+            ) from exc
 
         return result.stdout.strip()
 
@@ -50,12 +60,6 @@ class KeyGeneratorService:
         Generate WireGuard private/public key pair.
         """
         private_key = self.generate_private_key()
+        public_key = self.generate_public_key(private_key)
 
-        public_key = self.generate_public_key(
-            private_key,
-        )
-
-        return (
-            private_key,
-            public_key,
-        )
+        return private_key, public_key
