@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -47,22 +47,16 @@ class UserResponse(UserBase):
     created_at: datetime
     updated_at: datetime
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
 
 
-class UserResponse(UserBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
-
-
 class UserListResponse(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
 
     users: list[UserResponse]
     total: int

@@ -1,5 +1,5 @@
 """
-Peer Repository
+Peer repository layer.
 """
 
 from sqlalchemy import func, select
@@ -19,7 +19,6 @@ class PeerRepository(BaseRepository[Peer]):
         self,
         session: AsyncSession,
     ) -> None:
-
         super().__init__(
             session=session,
             model=Peer,
@@ -41,31 +40,47 @@ class PeerRepository(BaseRepository[Peer]):
 
         return result.scalar_one_or_none()
 
+    async def get_by_public_key(
+        self,
+        public_key: str,
+    ) -> Peer | None:
+        """
+        Return peer by public key.
+        """
+
+        result = await self.session.execute(
+            select(Peer).where(
+                Peer.public_key == public_key
+            )
+        )
+
+        return result.scalar_one_or_none()
 
     async def get_by_user(
         self,
         user_id: int,
     ) -> list[Peer]:
         """
-        Return peers by user.
+        Return peers owned by a user.
         """
 
         result = await self.session.execute(
-            select(Peer).where(
+            select(Peer)
+            .where(
                 Peer.user_id == user_id
             )
+            .order_by(Peer.id)
         )
 
         return list(
             result.scalars().all()
         )
 
-
     async def get_all_with_users(
         self,
     ) -> list[Peer]:
         """
-        Return all peers with user relation.
+        Return all peers with user relation loaded.
         """
 
         result = await self.session.execute(
@@ -73,37 +88,38 @@ class PeerRepository(BaseRepository[Peer]):
             .options(
                 selectinload(Peer.user)
             )
+            .order_by(Peer.id)
         )
 
         return list(
             result.scalars().all()
         )
-
 
     async def get_active(
         self,
     ) -> list[Peer]:
         """
-        Return active peers.
+        Return all active peers.
         """
 
         result = await self.session.execute(
-            select(Peer).where(
+            select(Peer)
+            .where(
                 Peer.is_active.is_(True)
             )
+            .order_by(Peer.id)
         )
 
         return list(
             result.scalars().all()
         )
-
 
     async def count_by_user(
         self,
         user_id: int,
     ) -> int:
         """
-        Count peers by user.
+        Count peers owned by a user.
         """
 
         result = await self.session.execute(
@@ -115,7 +131,6 @@ class PeerRepository(BaseRepository[Peer]):
         )
 
         return result.scalar_one()
-
 
     async def count(
         self,

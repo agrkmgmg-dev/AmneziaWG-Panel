@@ -5,41 +5,41 @@ from pathlib import Path
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-# -------------------------------------------------------
-# Add project root to PYTHONPATH
-# -------------------------------------------------------
-
 ROOT = Path(__file__).resolve().parents[2]
 
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
-
-# -------------------------------------------------------
-# Alembic Config
-# -------------------------------------------------------
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# -------------------------------------------------------
-# Import SQLAlchemy metadata
-# -------------------------------------------------------
-
+from backend.app.core.config import settings
 from backend.app.db.base import Base
 
-# Import ALL models so SQLAlchemy registers them
 from backend.app.models.user import User
 from backend.app.models.peer import Peer
 from backend.app.models.traffic import Traffic
 from backend.app.models.activity_log import ActivityLog
+from backend.app.models.token_revocation import TokenRevocation
 
 target_metadata = Base.metadata
 
-# -------------------------------------------------------
-# Offline migrations
-# -------------------------------------------------------
+DATABASE_URL = settings.DATABASE_URL
+
+if DATABASE_URL.startswith("sqlite+aiosqlite:///"):
+    DATABASE_URL = DATABASE_URL.replace(
+        "sqlite+aiosqlite:///",
+        "sqlite:///",
+        1,
+    )
+
+config.set_main_option(
+    "sqlalchemy.url",
+    DATABASE_URL,
+)
+
 
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
@@ -54,9 +54,6 @@ def run_migrations_offline() -> None:
     with context.begin_transaction():
         context.run_migrations()
 
-# -------------------------------------------------------
-# Online migrations
-# -------------------------------------------------------
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
@@ -75,7 +72,6 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
 
-# -------------------------------------------------------
 
 if context.is_offline_mode():
     run_migrations_offline()

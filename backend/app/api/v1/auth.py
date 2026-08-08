@@ -2,12 +2,16 @@
 Authentication API router.
 
 Provides:
+
 - User login
 - Refresh token
 - Current authenticated user
+- Logout / token revocation
 """
 
 import jwt
+
+from datetime import datetime, timezone
 
 from fastapi import (
     APIRouter,
@@ -15,6 +19,10 @@ from fastapi import (
     HTTPException,
     status,
 )
+
+from fastapi.security import OAuth2PasswordBearer
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.api.dependencies import (
     get_auth_service,
@@ -29,6 +37,12 @@ from backend.app.core.jwt import (
     decode_token,
 )
 
+from backend.app.db.database import (
+    get_db,
+)
+
+from backend.app.models.user import User
+
 from backend.app.schemas.auth import (
     CurrentUserResponse,
     LoginRequest,
@@ -40,10 +54,19 @@ from backend.app.services.auth import (
     AuthService,
 )
 
+from backend.app.services.token_revocation import (
+    TokenRevocationService,
+)
+
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"],
+)
+
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl="/api/v1/auth/login"
 )
 
 
@@ -150,7 +173,7 @@ async def refresh_token(
     response_model=CurrentUserResponse,
 )
 async def get_me(
-    user=Depends(require_active_user),
+    user: User = Depends(require_active_user),
 ) -> CurrentUserResponse:
     """
     Return the currently authenticated user.
@@ -159,3 +182,68 @@ async def get_me(
     return CurrentUserResponse.model_validate(
         user
     )
+
+
+@router.post(
+    "/logout",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def logout(
+    token: str = Depends(oauth2_scheme),
+    user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_db),
+) -> None:
+    """
+    Revoke the current access token.
+
+    After logout, the current JWT cannot be reused.
+    """
+
+    try:
+        payload = decode_token(token)
+
+    except jwt.InvalidTokenError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
+        ) from None
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid access token",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
+        )
+
+    jti = payload.get("jti")
+    exp = payload.get("exp")
+
+    if jti is None or exp is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={
+                "WWW-Authenticate": "Bearer",
+            },
+        )
+
+    expires_at = datetime.fromtimestamp(
+        exp,
+        tz=timezone.utc,
+    )
+
+    service = TokenRevocationService(
+        session
+    )
+
+    await service.revoke(
+        jti=jti,
+        expires_at=expires_at,
+    )
+
+    return None

@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+﻿from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.user import User
@@ -37,9 +37,11 @@ class UserRepository(BaseRepository[User]):
         """
         Return user by username.
         """
-        ...
+
         result = await self.session.execute(
-            select(User).where(User.username == username)
+            select(User).where(
+                User.username == username
+            )
         )
 
         return result.scalar_one_or_none()
@@ -47,16 +49,27 @@ class UserRepository(BaseRepository[User]):
     async def exists_username(
         self,
         username: str,
+        exclude_user_id: int | None = None,
     ) -> bool:
         """
         Check whether username already exists.
+
+        When exclude_user_id is provided, that user is
+        excluded from the uniqueness check.
         """
 
-        result = await self.session.execute(
+        query = (
             select(func.count())
             .select_from(User)
             .where(User.username == username)
         )
+
+        if exclude_user_id is not None:
+            query = query.where(
+                User.id != exclude_user_id
+            )
+
+        result = await self.session.execute(query)
 
         return result.scalar_one() > 0
 

@@ -12,7 +12,6 @@ from backend.app.schemas.activity_log import (
     ActivityLogCreate,
     ActivityLogResponse,
 )
-
 from backend.app.services.base import BaseService
 
 
@@ -41,6 +40,8 @@ class ActivityLogService(BaseService):
             repository,
         )
 
+        self.repository = repository
+
     async def get_by_id(
         self,
         log_id: int,
@@ -49,16 +50,12 @@ class ActivityLogService(BaseService):
         Get activity log by ID.
         """
 
-        log = await self.repository.get_by_id(
-            log_id
-        )
+        log = await self.repository.get_by_id(log_id)
 
         if log is None:
             return None
 
-        return ActivityLogResponse.model_validate(
-            log
-        )
+        return ActivityLogResponse.model_validate(log)
 
     async def get_all(
         self,
@@ -70,9 +67,22 @@ class ActivityLogService(BaseService):
         logs = await self.repository.get_all()
 
         return [
-            ActivityLogResponse.model_validate(
-                log
-            )
+            ActivityLogResponse.model_validate(log)
+            for log in logs
+        ]
+
+    async def get_latest(
+        self,
+        limit: int = 10,
+    ) -> list[ActivityLogResponse]:
+        """
+        Get latest activity logs.
+        """
+
+        logs = await self.repository.get_latest(limit)
+
+        return [
+            ActivityLogResponse.model_validate(log)
             for log in logs
         ]
 
@@ -90,19 +100,12 @@ class ActivityLogService(BaseService):
             description=data.description,
         )
 
-        log = await self.repository.create(
-            log
-        )
+        log = await self.repository.create(log)
 
         await self.commit()
+        await self.refresh(log)
 
-        await self.refresh(
-            log
-        )
-
-        return ActivityLogResponse.model_validate(
-            log
-        )
+        return ActivityLogResponse.model_validate(log)
 
     async def delete(
         self,
@@ -112,16 +115,12 @@ class ActivityLogService(BaseService):
         Delete activity log.
         """
 
-        log = await self.repository.get_by_id(
-            log_id
-        )
+        log = await self.repository.get_by_id(log_id)
 
         if log is None:
             return False
 
-        await self.repository.delete(
-            log
-        )
+        await self.repository.delete(log)
 
         await self.commit()
 

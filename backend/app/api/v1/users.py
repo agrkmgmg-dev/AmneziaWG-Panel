@@ -15,6 +15,7 @@ from backend.app.models.user import User
 from backend.app.schemas.user import (
     UserCreate,
     UserResponse,
+    UserUpdate,
 )
 from backend.app.services.user import UserService
 
@@ -40,7 +41,6 @@ async def get_users(
     return await service.get_all()
 
 
-
 @router.get(
     "/{user_id}",
     response_model=UserResponse,
@@ -54,9 +54,7 @@ async def get_user(
     Get user by ID.
     """
 
-    user = await service.get_by_id(
-        user_id
-    )
+    user = await service.get_by_id(user_id)
 
     if user is None:
         raise HTTPException(
@@ -65,7 +63,6 @@ async def get_user(
         )
 
     return user
-
 
 
 @router.post(
@@ -82,10 +79,58 @@ async def create_user(
     Create new user.
     """
 
-    return await service.create(
-        data
-    )
+    try:
+        return await service.create(data)
 
+    except Exception as exc:
+        if "UNIQUE constraint failed" in str(exc):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username already exists",
+            ) from exc
+
+        raise
+
+
+@router.patch(
+    "/{user_id}",
+    response_model=UserResponse,
+)
+async def update_user(
+    user_id: int,
+    data: UserUpdate,
+    current_user: User = Depends(require_active_user),
+    service: UserService = Depends(get_user_service),
+) -> UserResponse:
+    """
+    Update an existing user.
+    """
+
+    try:
+        user = await service.update(
+            user_id,
+            data,
+        )
+
+    except ValueError as exc:
+        if str(exc) == "Username already exists":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Username already exists",
+            ) from exc
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return user
 
 
 @router.delete(
@@ -101,9 +146,7 @@ async def delete_user(
     Delete user by ID.
     """
 
-    deleted = await service.delete(
-        user_id
-    )
+    deleted = await service.delete(user_id)
 
     if not deleted:
         raise HTTPException(

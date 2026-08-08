@@ -1,27 +1,156 @@
-fastapi==0.116.1
-uvicorn[standard]==0.35.0
+from fastapi.testclient import TestClient
 
-sqlalchemy==2.0.43
-alembic==1.16.4
+from backend.app.main import app
 
-pydantic==2.11.7
-pydantic-settings==2.10.1
+client = TestClient(app)
 
-python-dotenv==1.1.1
+USERNAME = "admin"
+PASSWORD = "Admin123!"
 
-jinja2==3.1.6
-python-multipart==0.0.20
+print("=" * 60)
+print("Authentication E2E Test")
+print("=" * 60)
 
-passlib[bcrypt]==1.7.4
-pyjwt==2.10.1
+# 1. Login
 
-qrcode[pil]==8.2
+response = client.post(
+"/api/v1/auth/login",
+json={
+"username": USERNAME,
+"password": PASSWORD,
+},
+)
 
-httpx==0.28.1
+print(f"\n[1] Login => {response.status_code}")
+print(response.json())
 
-pytest==8.4.1
-pytest-cov==6.2.1
+assert response.status_code == 200
 
-sqlalchemy==2.0.43
-alembic==1.16.4
-aiosqlite==0.21.0
+tokens = response.json()
+
+access_token = tokens["access_token"]
+refresh_token = tokens["refresh_token"]
+
+assert access_token
+assert refresh_token
+assert tokens["token_type"] == "bearer"
+
+print("PASS: Login")
+
+# 2. Current user
+
+headers = {
+"Authorization": f"Bearer {access_token}",
+}
+
+response = client.get(
+"/api/v1/auth/me",
+headers=headers,
+)
+
+print(f"\n[2] /me => {response.status_code}")
+print(response.json())
+
+assert response.status_code == 200
+assert response.json()["username"] == USERNAME
+
+print("PASS: Access token /me")
+
+# 3. Refresh token
+
+response = client.post(
+"/api/v1/auth/refresh",
+json={
+"refresh_token": refresh_token,
+},
+)
+
+print(f"\n[3] Refresh => {response.status_code}")
+print(response.json())
+
+assert response.status_code == 200
+
+refreshed = response.json()
+
+new_access_token = refreshed["access_token"]
+new_refresh_token = refreshed["refresh_token"]
+
+assert new_access_token
+assert new_refresh_token
+
+print("PASS: Refresh token")
+
+# 4. New access token
+
+new_headers = {
+"Authorization": f"Bearer {new_access_token}",
+}
+
+response = client.get(
+"/api/v1/auth/me",
+headers=new_headers,
+)
+
+print(
+f"\n[4] /me with refreshed token => "
+f"{response.status_code}"
+)
+print(response.json())
+
+assert response.status_code == 200
+
+print("PASS: Refreshed access token")
+
+# 5. Logout
+
+response = client.post(
+"/api/v1/auth/logout",
+headers=new_headers,
+)
+
+print(f"\n[5] Logout => {response.status_code}")
+print(response.json())
+
+assert response.status_code in (200, 204)
+
+print("PASS: Logout / Revocation")
+
+# 6. Revoked token must fail
+
+response = client.get(
+"/api/v1/auth/me",
+headers=new_headers,
+)
+
+print(
+f"\n[6] Revoked token /me => "
+f"{response.status_code}"
+)
+print(response.json())
+
+assert response.status_code == 401
+
+print("PASS: Revoked access token rejected")
+
+# 7. Invalid refresh token
+
+response = client.post(
+"/api/v1/auth/refresh",
+json={
+"refresh_token": "invalid-token",
+},
+)
+
+print(
+f"\n[7] Invalid refresh token => "
+f"{response.status_code}"
+)
+print(response.json())
+
+assert response.status_code == 401
+
+print("PASS: Invalid refresh token rejected")
+
+print("\n" + "=" * 60)
+print("ALL AUTHENTICATION TESTS PASSED")
+print("=" * 60)

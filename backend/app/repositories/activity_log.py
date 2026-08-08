@@ -8,8 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.activity_log import ActivityLog
-
-from .base import BaseRepository
+from backend.app.repositories.base import BaseRepository
 
 
 class ActivityLogRepository(BaseRepository[ActivityLog]):
@@ -32,7 +31,6 @@ class ActivityLogRepository(BaseRepository[ActivityLog]):
             model=ActivityLog,
         )
 
-
     async def get_latest(
         self,
         limit: int = 10,
@@ -40,6 +38,9 @@ class ActivityLogRepository(BaseRepository[ActivityLog]):
         """
         Return latest activity logs.
         """
+
+        if limit < 1:
+            limit = 1
 
         query = (
             select(ActivityLog)

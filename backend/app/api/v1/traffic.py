@@ -40,6 +40,45 @@ async def get_traffic_records(
     return await service.get_all()
 
 
+@router.get(
+    "/peer/{peer_id}/usage",
+)
+async def get_peer_usage(
+    peer_id: int,
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
+) -> dict:
+    """
+    Get traffic usage of a peer.
+    """
+
+    return await service.get_usage(peer_id)
+
+
+@router.get(
+    "/peer/{peer_id}/limit/{limit_bytes}",
+)
+async def check_peer_limit(
+    peer_id: int,
+    limit_bytes: int,
+    current_user: User = Depends(require_active_user),
+    service: TrafficService = Depends(get_traffic_service),
+) -> dict:
+    """
+    Check peer traffic limit.
+    """
+
+    if limit_bytes < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Traffic limit cannot be negative",
+        )
+
+    return await service.check_limit(
+        peer_id,
+        limit_bytes,
+    )
+
 
 @router.get(
     "/{traffic_id}",
@@ -54,9 +93,7 @@ async def get_traffic(
     Get traffic record by ID.
     """
 
-    traffic = await service.get_by_id(
-        traffic_id
-    )
+    traffic = await service.get_by_id(traffic_id)
 
     if traffic is None:
         raise HTTPException(
@@ -65,7 +102,6 @@ async def get_traffic(
         )
 
     return traffic
-
 
 
 @router.post(
@@ -82,10 +118,7 @@ async def create_traffic(
     Create traffic record.
     """
 
-    return await service.create(
-        data
-    )
-
+    return await service.create(data)
 
 
 @router.delete(
@@ -101,50 +134,10 @@ async def delete_traffic(
     Delete traffic record by ID.
     """
 
-    deleted = await service.delete(
-        traffic_id
-    )
+    deleted = await service.delete(traffic_id)
 
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Traffic record not found",
         )
-
-
-
-@router.get(
-    "/peer/{peer_id}/usage",
-)
-async def get_peer_usage(
-    peer_id: int,
-    current_user: User = Depends(require_active_user),
-    service: TrafficService = Depends(get_traffic_service),
-) -> dict:
-    """
-    Get traffic usage of a peer.
-    """
-
-    return await service.get_usage(
-        peer_id
-    )
-
-
-
-@router.get(
-    "/peer/{peer_id}/limit/{limit_bytes}",
-)
-async def check_peer_limit(
-    peer_id: int,
-    limit_bytes: int,
-    current_user: User = Depends(require_active_user),
-    service: TrafficService = Depends(get_traffic_service),
-) -> dict:
-    """
-    Check peer traffic limit.
-    """
-
-    return await service.check_limit(
-        peer_id,
-        limit_bytes,
-    )

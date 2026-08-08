@@ -1,3 +1,9 @@
+"""
+Traffic Repository
+
+Database access layer for peer traffic records.
+"""
+
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -19,118 +25,102 @@ class TrafficRepository(BaseRepository[Traffic]):
             model=Traffic,
         )
 
-
     async def get_by_peer(
         self,
         peer_id: int,
     ) -> list[Traffic]:
-        """
-        Return traffic records for peer.
-        """
 
         result = await self.session.execute(
             select(Traffic)
-            .where(
-                Traffic.peer_id == peer_id
-            )
-            .order_by(
-                Traffic.created_at.desc()
-            )
+            .where(Traffic.peer_id == peer_id)
+            .order_by(Traffic.id)
         )
 
-        return list(
-            result.scalars().all()
+        return list(result.scalars().all())
+
+    async def get_latest_by_peer(
+        self,
+        peer_id: int,
+    ) -> Traffic | None:
+
+        result = await self.session.execute(
+            select(Traffic)
+            .where(Traffic.peer_id == peer_id)
+            .order_by(Traffic.id.desc())
+            .limit(1)
         )
 
+        return result.scalar_one_or_none()
 
-    async def get_total_upload(
+    async def get_total_upload_by_peer(
         self,
         peer_id: int,
     ) -> int:
-        """
-        Return total upload bytes.
-        """
 
         result = await self.session.execute(
             select(
                 func.coalesce(
-                    func.sum(
-                        Traffic.upload_bytes
-                    ),
+                    func.sum(Traffic.upload_bytes),
                     0,
                 )
             )
-            .where(
-                Traffic.peer_id == peer_id
-            )
+            .where(Traffic.peer_id == peer_id)
         )
 
-        return result.scalar_one()
+        return int(result.scalar_one())
 
-
-    async def get_total_download(
+    async def get_total_download_by_peer(
         self,
         peer_id: int,
     ) -> int:
-        """
-        Return total download bytes.
-        """
 
         result = await self.session.execute(
             select(
                 func.coalesce(
-                    func.sum(
-                        Traffic.download_bytes
-                    ),
+                    func.sum(Traffic.download_bytes),
                     0,
                 )
             )
-            .where(
-                Traffic.peer_id == peer_id
-            )
+            .where(Traffic.peer_id == peer_id)
         )
 
-        return result.scalar_one()
+        return int(result.scalar_one())
 
-
-    async def get_total_traffic(
+    async def get_total_by_peer(
         self,
         peer_id: int,
     ) -> int:
-        """
-        Return total traffic usage.
-        """
 
         result = await self.session.execute(
             select(
                 func.coalesce(
-                    func.sum(
-                        Traffic.upload_bytes
-                        + Traffic.download_bytes
-                    ),
+                    func.sum(Traffic.total_bytes),
                     0,
                 )
             )
-            .where(
-                Traffic.peer_id == peer_id
-            )
+            .where(Traffic.peer_id == peer_id)
         )
 
-        return result.scalar_one()
+        return int(result.scalar_one())
 
+    async def count_by_peer(
+        self,
+        peer_id: int,
+    ) -> int:
+
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(Traffic)
+            .where(Traffic.peer_id == peer_id)
+        )
+
+        return int(result.scalar_one())
 
     async def count(self) -> int:
-        """
-        Count total traffic records.
-        """
 
         result = await self.session.execute(
-            select(
-                func.count()
-            )
-            .select_from(
-                Traffic
-            )
+            select(func.count())
+            .select_from(Traffic)
         )
 
-        return result.scalar_one()
+        return int(result.scalar_one())

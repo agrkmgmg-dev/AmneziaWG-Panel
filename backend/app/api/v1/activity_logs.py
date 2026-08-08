@@ -6,6 +6,7 @@ from fastapi import (
     APIRouter,
     Depends,
     HTTPException,
+    Query,
     status,
 )
 
@@ -31,7 +32,9 @@ router = APIRouter(
 )
 async def get_activity_logs(
     current_user: User = Depends(require_active_user),
-    service: ActivityLogService = Depends(get_activity_log_service),
+    service: ActivityLogService = Depends(
+        get_activity_log_service
+    ),
 ) -> list[ActivityLogResponse]:
     """
     Get all activity logs.
@@ -39,6 +42,27 @@ async def get_activity_logs(
 
     return await service.get_all()
 
+
+@router.get(
+    "/latest",
+    response_model=list[ActivityLogResponse],
+)
+async def get_latest_activity_logs(
+    limit: int = Query(
+        default=10,
+        ge=1,
+        le=100,
+    ),
+    current_user: User = Depends(require_active_user),
+    service: ActivityLogService = Depends(
+        get_activity_log_service
+    ),
+) -> list[ActivityLogResponse]:
+    """
+    Get latest activity logs.
+    """
+
+    return await service.get_latest(limit)
 
 
 @router.get(
@@ -48,15 +72,15 @@ async def get_activity_logs(
 async def get_activity_log(
     log_id: int,
     current_user: User = Depends(require_active_user),
-    service: ActivityLogService = Depends(get_activity_log_service),
+    service: ActivityLogService = Depends(
+        get_activity_log_service
+    ),
 ) -> ActivityLogResponse:
     """
     Get activity log by ID.
     """
 
-    log = await service.get_by_id(
-        log_id
-    )
+    log = await service.get_by_id(log_id)
 
     if log is None:
         raise HTTPException(
@@ -67,7 +91,6 @@ async def get_activity_log(
     return log
 
 
-
 @router.post(
     "",
     response_model=ActivityLogResponse,
@@ -76,16 +99,15 @@ async def get_activity_log(
 async def create_activity_log(
     data: ActivityLogCreate,
     current_user: User = Depends(require_active_user),
-    service: ActivityLogService = Depends(get_activity_log_service),
+    service: ActivityLogService = Depends(
+        get_activity_log_service
+    ),
 ) -> ActivityLogResponse:
     """
     Create activity log.
     """
 
-    return await service.create(
-        data
-    )
-
+    return await service.create(data)
 
 
 @router.delete(
@@ -95,15 +117,15 @@ async def create_activity_log(
 async def delete_activity_log(
     log_id: int,
     current_user: User = Depends(require_active_user),
-    service: ActivityLogService = Depends(get_activity_log_service),
+    service: ActivityLogService = Depends(
+        get_activity_log_service
+    ),
 ) -> None:
     """
     Delete activity log by ID.
     """
 
-    deleted = await service.delete(
-        log_id
-    )
+    deleted = await service.delete(log_id)
 
     if not deleted:
         raise HTTPException(

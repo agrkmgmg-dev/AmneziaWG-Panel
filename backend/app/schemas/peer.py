@@ -42,7 +42,9 @@ class PeerUpdate(BaseModel):
 
 
 class PeerResponse(PeerBase):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
 
     id: int
     user_id: int
