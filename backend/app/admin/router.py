@@ -26,6 +26,7 @@ from backend.app.services.config_generator import ConfigGeneratorService
 from backend.app.services.dashboard import DashboardService
 from backend.app.services.traffic import TrafficService
 from backend.app.services.activity_log import ActivityLogService
+from backend.app.services.auth import AuthService
 from backend.app.services.admin_logging import log_admin_action
 router = APIRouter(
     prefix="/admin",
@@ -158,17 +159,23 @@ async def login(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    session: AsyncSession = Depends(get_db),
 ):
 
-    if username == "admin" and password == "123456":
+    service = AuthService(session)
 
+    user = await service.authenticate(
+        username,
+        password,
+    )
+
+    if user is not None and user.is_superuser:
         login_admin(request)
 
         return RedirectResponse(
             url="/admin/dashboard",
             status_code=302,
         )
-
 
     return templates.TemplateResponse(
         request=request,

@@ -79,7 +79,7 @@ def test_admin_login_success() -> None:
         "/admin/login",
         data={
             "username": "admin",
-            "password": "123456",
+            "password": "Admin123!",
         },
         follow_redirects=False,
     )
@@ -95,7 +95,7 @@ def test_admin_dashboard_after_login() -> None:
         "/admin/login",
         data={
             "username": "admin",
-            "password": "123456",
+            "password": "Admin123!",
         },
         follow_redirects=False,
     )
