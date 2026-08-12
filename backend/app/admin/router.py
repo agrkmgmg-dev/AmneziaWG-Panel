@@ -1,4 +1,4 @@
-"""
+﻿"""
 Admin dashboard and authentication router.
 """
 
@@ -24,6 +24,9 @@ from backend.app.services.admin_peer import AdminPeerService
 from backend.app.services.admin_user import AdminUserService
 from backend.app.services.config_generator import ConfigGeneratorService
 from backend.app.services.dashboard import DashboardService
+from backend.app.services.traffic import TrafficService
+from backend.app.services.activity_log import ActivityLogService
+from backend.app.services.admin_logging import log_admin_action
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
@@ -60,6 +63,19 @@ async def get_admin_peer_service(
 
     return AdminPeerService(session)
 
+
+async def get_admin_traffic_service(
+    session: AsyncSession = Depends(get_db),
+) -> TrafficService:
+
+    return TrafficService(session)
+
+
+async def get_admin_activity_log_service(
+    session: AsyncSession = Depends(get_db),
+) -> ActivityLogService:
+
+    return ActivityLogService(session)
 
 async def get_config_service() -> ConfigGeneratorService:
 
@@ -272,6 +288,12 @@ async def create_user_page(
     request: Request,
 ):
 
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
     return templates.TemplateResponse(
         request=request,
         name="admin/create_user.html",
@@ -280,7 +302,6 @@ async def create_user_page(
             "error": None,
         },
     )
-
 
 @router.post("/users/create")
 async def create_user(
@@ -292,24 +313,26 @@ async def create_user(
     ),
 ):
 
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
     user = await service.create_user(
         username=username,
         password=password,
     )
 
-
     if user is None:
-
         return templates.TemplateResponse(
             request=request,
             name="admin/create_user.html",
             context={
                 "request": request,
-                "error":
-                "این نام کاربری قبلا ثبت شده است",
+                "error": "این نام کاربری قبلا ثبت شده است",
             },
         )
-
 
     return RedirectResponse(
         url="/admin/users",
@@ -317,6 +340,9 @@ async def create_user(
     )
 
 
+# =====================================================
+# Peers
+# =====================================================
 # =====================================================
 # Peers
 # =====================================================
@@ -380,6 +406,11 @@ async def create_peer(
         get_admin_peer_service
     ),
 ):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
 
     if expires_at:
         expires_at = datetime.fromisoformat(
@@ -398,6 +429,7 @@ async def create_peer(
         url="/admin/peers",
         status_code=302,
     )
+
 @router.get("/peers/{peer_id}/delete")
 async def delete_peer(
     peer_id: int,
@@ -473,4 +505,146 @@ async def download_peer_qr(
         qr_path,
         media_type="image/png",
         filename=f"{peer.name}.png",
+    )
+
+
+
+
+
+
+
+# =====================================================
+# ADMIN TRAFFIC
+# =====================================================
+
+@router.get(
+    "/traffic",
+    response_class=HTMLResponse,
+)
+async def admin_traffic(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    service = TrafficService(session)
+
+    traffic = await service.get_all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/traffic.html",
+        context={
+            "request": request,
+            "traffic": traffic,
+            "total": len(traffic),
+        },
+    )
+
+
+@router.get("/traffic/{traffic_id}/delete")
+async def delete_admin_traffic(
+    traffic_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    service = TrafficService(session)
+
+    await service.delete(traffic_id)
+
+    return RedirectResponse(
+        url="/admin/traffic",
+        status_code=302,
+    )
+
+
+# =====================================================
+# ADMIN ACTIVITY LOGS
+# =====================================================
+
+@router.get(
+    "/activity-logs",
+    response_class=HTMLResponse,
+)
+async def admin_activity_logs(
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    service = ActivityLogService(session)
+
+    logs = await service.get_all()
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/activity_logs.html",
+        context={
+            "request": request,
+            "logs": logs,
+            "total": len(logs),
+        },
+    )
+
+
+@router.get("/activity-logs/{log_id}/delete")
+async def delete_admin_activity_log(
+    log_id: int,
+    request: Request,
+    session: AsyncSession = Depends(get_db),
+):
+
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    service = ActivityLogService(session)
+
+    await service.delete(log_id)
+
+    return RedirectResponse(
+        url="/admin/activity-logs",
+        status_code=302,
+    )
+
+
+
+@router.get(
+    "/about",
+    response_class=HTMLResponse,
+)
+async def about(
+    request: Request,
+):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(
+            url="/admin/login",
+            status_code=302,
+        )
+
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/about.html",
+        context={
+            "request": request,
+        },
     )

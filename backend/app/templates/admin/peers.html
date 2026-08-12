@@ -1,118 +1,129 @@
-<h2>🔑 کلاینت‌های AmneziaWG</h2>
+﻿{% extends "admin/base.html" %}
 
-<a href="/admin/peers/create">
-    ➕ ایجاد کلاینت جدید
-</a>
+{% block title %}کلاینت‌ها - AmneziaWG Panel{% endblock %}
+{% block nav_peers %}active{% endblock %}
+{% block page_title %}کلاینت‌های AmneziaWG{% endblock %}
+{% block page_subtitle %}مدیریت Peerها و دسترسی VPN{% endblock %}
 
-<br><br>
+{% block content %}
 
-<table border="1">
+<div class="page-toolbar">
+    <div>
+        <h2>لیست کلاینت‌ها</h2>
+        <p>کلاینت‌های ثبت‌شده AmneziaWG</p>
+    </div>
 
-<tr>
-    <th>ID</th>
-    <th>Name</th>
-    <th>IP</th>
-    <th>Status</th>
-    <th>Expire</th>
-    <th>Action</th>
-</tr>
+    <a href="/admin/peers/create" class="btn btn-primary">
+        <span>➕</span>
+        ایجاد کلاینت
+    </a>
+</div>
 
+<section class="panel">
 
-{% if peers %}
+    {% if peers %}
 
-{% for peer in peers %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>کلاینت</th>
+                    <th>IP</th>
+                    <th>وضعیت</th>
+                    <th>انقضا</th>
+                    <th>مصرف</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
 
-<tr>
+            <tbody>
+            {% for peer in peers %}
+                <tr>
 
-    <td>
-        {{ peer.id }}
-    </td>
+                    <td>
+                        <span class="id-badge">#{{ peer.id }}</span>
+                    </td>
 
+                    <td>
+                        <div class="peer-cell">
+                            <div class="peer-icon">🔑</div>
+                            <strong>{{ peer.name }}</strong>
+                        </div>
+                    </td>
 
-    <td>
-        {{ peer.name }}
-    </td>
+                    <td>
+                        <code class="ip-code">{{ peer.address }}</code>
+                    </td>
 
+                    <td>
+                        {% if peer.status == "🟢 فعال" %}
+                            <span class="badge badge-success">فعال</span>
+                        {% elif peer.status == "🔴 غیرفعال" %}
+                            <span class="badge badge-danger">غیرفعال</span>
+                        {% elif peer.status == "🔴 منقضی شده" %}
+                            <span class="badge badge-danger">منقضی شده</span>
+                        {% else %}
+                            <span class="badge badge-neutral">بدون تاریخ</span>
+                        {% endif %}
+                    </td>
 
-    <td>
-        {{ peer.address }}
-    </td>
+                    <td>
+                        {% if peer.expires_at %}
+                            {{ peer.expires_at }}
+                        {% else %}
+                            <span class="muted">بدون تاریخ</span>
+                        {% endif %}
+                    </td>
 
+                    <td>
+                        <span class="muted">
+                            {{ peer.usage_display or "-" }}
+                        </span>
+                    </td>
 
-    <td>
+                    <td>
+                        <div class="table-actions">
+                            <a
+                                href="/admin/peers/{{ peer.id }}/config"
+                                class="btn btn-sm btn-secondary"
+                            >
+                                ⬇️ Config
+                            </a>
 
-        {% if peer.status == "🟢 فعال" %}
-            🟢 فعال
+                            <a
+                                href="/admin/peers/{{ peer.id }}/qr"
+                                class="btn btn-sm btn-secondary"
+                            >
+                                📱 QR
+                            </a>
 
-        {% elif peer.status == "🔴 منقضی شده" %}
-            🔴 منقضی شده
+                            <a
+                                href="/admin/peers/{{ peer.id }}/delete"
+                                class="btn btn-sm btn-danger-outline"
+                                onclick="return confirm('این کلاینت حذف شود؟');"
+                            >
+                                🗑 حذف
+                            </a>
+                        </div>
+                    </td>
 
-        {% elif peer.status == "🔴 غیرفعال" %}
-            🔴 غیرفعال
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-        {% else %}
-            ⚪ بدون تاریخ
+    {% else %}
 
-        {% endif %}
+    <div class="empty-state">
+        <span>🔑</span>
+        <strong>هنوز کلاینتی وجود ندارد</strong>
+        <p>برای ایجاد اولین کلاینت از دکمه بالا استفاده کنید.</p>
+    </div>
 
-    </td>
+    {% endif %}
 
+</section>
 
-    <td>
-
-        {% if peer.expires_at %}
-            {{ peer.expires_at }}
-
-        {% else %}
-            بدون تاریخ
-
-        {% endif %}
-
-    </td>
-
-
-    <td>
-
-        <a href="/admin/peers/{{ peer.id }}/config">
-            ⬇️ کانفیگ
-        </a>
-
-        |
-
-        <a href="/admin/peers/{{ peer.id }}/qr">
-            📱 QR
-        </a>
-
-        |
-
-        <a href="/admin/peers/{{ peer.id }}/delete">
-            🗑 حذف
-        </a>
-
-    </td>
-
-
-</tr>
-
-{% endfor %}
-
-
-{% else %}
-
-<tr>
-    <td colspan="6">
-        هیچ کلاینتی وجود ندارد
-    </td>
-</tr>
-
-{% endif %}
-
-
-</table>
-
-
-<br>
-
-<a href="/admin/dashboard">
-    ← بازگشت به داشبورد
-</a>
+{% endblock %}

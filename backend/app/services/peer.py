@@ -1,4 +1,4 @@
-"""
+﻿"""
 Peer service layer.
 
 Contains business logic related to AmneziaWG peers.
@@ -7,6 +7,7 @@ Contains business logic related to AmneziaWG peers.
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.peer import Peer
+from backend.app.models.user import User
 from backend.app.repositories.peer import PeerRepository
 from backend.app.schemas.peer import (
     PeerCreate,
@@ -45,6 +46,31 @@ class PeerService(BaseService):
         self.ip_manager = IPManagerService(
             peer_repository=self.repository,
         )
+
+    async def get_for_user(
+        self,
+        peer_id: int,
+        current_user: User,
+    ) -> Peer | None:
+        """
+        Get peer model if the current user has access.
+
+        Superusers can access all peers.
+        Regular users can access only their own peers.
+        """
+
+        peer = await self.repository.get_by_id(peer_id)
+
+        if peer is None:
+            return None
+
+        if current_user.is_superuser:
+            return peer
+
+        if peer.user_id != current_user.id:
+            return None
+
+        return peer
 
     async def get_by_id(
         self,

@@ -1,0 +1,122 @@
+﻿<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>
+        {% block title %}AmneziaWG Panel{% endblock %}
+    </title>
+
+    <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+
+<body>
+
+<div class="app-shell">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-logo">AW</div>
+
+            <div>
+                <strong>AmneziaWG</strong>
+                <span>Panel</span>
+            </div>
+        </div>
+
+        <nav class="nav">
+
+            <a
+                href="/admin/dashboard"
+                class="nav-link {% block nav_dashboard %}{% endblock %}"
+            >
+                <span>🏠</span>
+                <span>داشبورد</span>
+            </a>
+
+            <a
+                href="/admin/users"
+                class="nav-link {% block nav_users %}{% endblock %}"
+            >
+                <span>👤</span>
+                <span>کاربران</span>
+            </a>
+
+            <a
+                href="/admin/peers"
+                class="nav-link {% block nav_peers %}{% endblock %}"
+            >
+                <span>🔑</span>
+                <span>کلاینت‌ها</span>
+            </a>
+
+            <a
+                href="/admin/traffic"
+                class="nav-link {% block nav_traffic %}{% endblock %}"
+            >
+                <span>📊</span>
+                <span>ترافیک</span>
+            </a>
+
+            <a
+                href="/admin/activity-logs"
+                class="nav-link {% block nav_logs %}{% endblock %}"
+            >
+                <span>📝</span>
+                <span>فعالیت‌ها</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <a
+                href="/admin/logout"
+                class="nav-link logout-link"
+            >
+                <span>🚪</span>
+                <span>خروج</span>
+            </a>
+
+        </div>
+
+    </aside>
+
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+                <h1>
+                    {% block page_title %}
+                    AmneziaWG Panel
+                    {% endblock %}
+                </h1>
+
+                <p>
+                    {% block page_subtitle %}
+                    مدیریت سرور VPN
+                    {% endblock %}
+                </p>
+            </div>
+
+        </header>
+
+
+        <section class="content">
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+</div>
+
+</body>
+</html>

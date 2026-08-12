@@ -1,0 +1,109 @@
+﻿{% extends "admin/base.html" %}
+
+{% block title %}ترافیک - AmneziaWG Panel{% endblock %}
+{% block nav_traffic %}active{% endblock %}
+{% block page_title %}ترافیک{% endblock %}
+{% block page_subtitle %}مصرف کلاینت‌های VPN{% endblock %}
+
+{% block content %}
+
+<div class="page-toolbar">
+    <div>
+        <h2>رکوردهای ترافیک</h2>
+        <p>{{ total }} رکورد ثبت شده</p>
+    </div>
+</div>
+
+<section class="panel">
+
+{% if traffic %}
+
+<div class="table-wrap">
+
+    <table class="data-table">
+
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Peer</th>
+                <th>Upload</th>
+                <th>Download</th>
+                <th>Total</th>
+                <th>زمان</th>
+                <th>عملیات</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+        {% for item in traffic %}
+
+            <tr>
+
+                <td>
+                    <span class="id-badge">
+                        #{{ item.id }}
+                    </span>
+                </td>
+
+                <td>
+                    <code class="ip-code">
+                        #{{ item.peer_id }}
+                    </code>
+                </td>
+
+                <td>
+                    {{ item.upload_bytes }}
+                </td>
+
+                <td>
+                    {{ item.download_bytes }}
+                </td>
+
+                <td>
+                    <strong>
+                        {{ item.upload_bytes + item.download_bytes }}
+                    </strong>
+                </td>
+
+                <td>
+                    {{ item.created_at }}
+                </td>
+
+                <td>
+                    <div class="table-actions">
+
+                        <a
+                            href="/admin/traffic/{{ item.id }}/delete"
+                            class="btn btn-sm btn-danger-outline"
+                            onclick="return confirm('این رکورد ترافیک حذف شود؟');"
+                        >
+                            🗑 حذف
+                        </a>
+
+                    </div>
+                </td>
+
+            </tr>
+
+        {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% else %}
+
+<div class="empty-state">
+    <span>📊</span>
+    <strong>هنوز رکورد ترافیکی وجود ندارد</strong>
+    <p>اطلاعات مصرف کلاینت‌ها در این قسمت نمایش داده می‌شود.</p>
+</div>
+
+{% endif %}
+
+</section>
+
+{% endblock %}

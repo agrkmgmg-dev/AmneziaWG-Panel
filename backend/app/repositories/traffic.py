@@ -1,4 +1,4 @@
-"""
+﻿"""
 Traffic Repository
 
 Database access layer for peer traffic records.
@@ -8,6 +8,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.traffic import Traffic
+from backend.app.models.peer import Peer
 from backend.app.repositories.base import BaseRepository
 
 
@@ -24,6 +25,36 @@ class TrafficRepository(BaseRepository[Traffic]):
             session=session,
             model=Traffic,
         )
+
+    async def get_peer_by_traffic_id(
+        self,
+        traffic_id: int,
+    ) -> Peer | None:
+        result = await self.session.execute(
+            select(Peer)
+            .join(Traffic, Traffic.peer_id == Peer.id)
+            .where(Traffic.id == traffic_id)
+        )
+
+        return result.scalar_one_or_none()
+
+    async def get_by_user(
+        self,
+        user_id: int,
+    ) -> list[Traffic]:
+        """
+        Get all traffic records belonging to peers
+        owned by the specified user.
+        """
+
+        result = await self.session.execute(
+            select(Traffic)
+            .join(Peer, Traffic.peer_id == Peer.id)
+            .where(Peer.user_id == user_id)
+            .order_by(Traffic.id)
+        )
+
+        return list(result.scalars().all())
 
     async def get_by_peer(
         self,

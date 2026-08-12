@@ -1,59 +1,74 @@
-<!DOCTYPE html>
-<html lang="fa">
-<head>
-    <meta charset="UTF-8">
-    <title>ایجاد کلاینت جدید AmneziaWG</title>
-</head>
+﻿{% extends "admin/base.html" %}
 
-<body>
+{% block title %}ایجاد کلاینت - AmneziaWG Panel{% endblock %}
+{% block nav_peers %}active{% endblock %}
+{% block page_title %}ایجاد کلاینت{% endblock %}
+{% block page_subtitle %}ایجاد Peer جدید برای سرویس VPN{% endblock %}
 
-<h2>➕ ایجاد کلاینت جدید AmneziaWG</h2>
+{% block content %}
 
-<form action="/admin/peers/create" method="post">
+<section class="form-card">
 
-    <label>نام کلاینت</label><br>
-    <input
-        type="text"
-        name="name"
-        required
-    >
-    <br><br>
+    <div class="form-header">
+        <div class="form-icon purple-bg">🔑</div>
+        <div>
+            <h2>ایجاد کلاینت جدید</h2>
+            <p>کلیدها و IP توسط Backend مدیریت می‌شوند.</p>
+        </div>
+    </div>
 
-    <label>User ID</label><br>
-    <input
-        type="number"
-        name="user_id"
-        required
-    >
-    <br><br>
+    <div class="info-box">
+        <strong>نکته:</strong>
+        آدرس IP و کلیدهای WireGuard به‌صورت خودکار توسط سیستم مدیریت می‌شوند.
+    </div>
 
-    <label>Address</label><br>
-    <input
-        type="text"
-        name="address"
-        placeholder="10.0.0.2/32"
-        required
-    >
-    <br><br>
+    <form action="/admin/peers/create" method="post" class="admin-form">
 
-    <label>تاریخ انقضا</label><br>
-    <input
-        type="datetime-local"
-        name="expires_at"
-    >
-    <br><br>
+        <div class="form-group">
+            <label for="name">نام کلاینت</label>
+            <input
+                id="name"
+                type="text"
+                name="name"
+                placeholder="مثلاً iPhone-Ali"
+                required
+            >
+        </div>
 
-    <button type="submit">
-        ذخیره کلاینت
-    </button>
+        <div class="form-group">
+            <label for="user_id">شناسه کاربر</label>
+            <input
+                id="user_id"
+                type="number"
+                name="user_id"
+                placeholder="مثلاً 12"
+                min="1"
+                required
+            >
+        </div>
 
-</form>
+        <div class="form-group">
+            <label for="expires_at">تاریخ انقضا</label>
+            <input
+                id="expires_at"
+                type="datetime-local"
+                name="expires_at"
+            >
+            <small>خالی گذاشتن این فیلد یعنی بدون تاریخ انقضا.</small>
+        </div>
 
-<br>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                💾 ایجاد کلاینت
+            </button>
 
-<a href="/admin/peers">
-    ← بازگشت
-</a>
+            <a href="/admin/peers" class="btn btn-secondary">
+                ← بازگشت
+            </a>
+        </div>
 
-</body>
-</html>
+    </form>
+
+</section>
+
+{% endblock %}

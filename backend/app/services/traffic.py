@@ -1,4 +1,4 @@
-"""
+﻿"""
 Traffic service layer.
 
 Contains business logic related to traffic records.
@@ -59,9 +59,29 @@ class TrafficService(BaseService):
     ) -> list[TrafficResponse]:
         """
         Get all traffic records.
+
+        Intended for superusers/admins.
         """
 
         records = await self.repository.get_all()
+
+        return [
+            TrafficResponse.model_validate(record)
+            for record in records
+        ]
+
+    async def get_by_user(
+        self,
+        user_id: int,
+    ) -> list[TrafficResponse]:
+        """
+        Get traffic records belonging only to peers
+        owned by the specified user.
+        """
+
+        records = await self.repository.get_by_user(
+            user_id
+        )
 
         return [
             TrafficResponse.model_validate(record)
@@ -201,3 +221,14 @@ class TrafficService(BaseService):
         await self.commit()
 
         return True
+
+    async def check_limit(
+        self,
+        peer_id: int,
+        limit_bytes: int,
+    ) -> TrafficSummaryResponse:
+        """
+        Check aggregated traffic usage against a limit.
+        """
+
+        return await self.get_summary(peer_id)

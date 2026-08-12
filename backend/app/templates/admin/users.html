@@ -1,176 +1,107 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>کاربران - AmneziaWG Panel</title>
+﻿{% extends "admin/base.html" %}
 
-    <style>
-        body {
-            font-family: Tahoma, Arial;
-            background:#f5f5f5;
-            max-width:1000px;
-            margin:40px auto;
-        }
+{% block title %}کاربران - AmneziaWG Panel{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block page_title %}کاربران{% endblock %}
+{% block page_subtitle %}مدیریت کاربران پنل{% endblock %}
 
-        .card {
-            background:white;
-            padding:25px;
-            border-radius:12px;
-            box-shadow:0 2px 10px #ddd;
-        }
+{% block content %}
 
-        h2 {
-            margin-bottom:20px;
-        }
+<div class="page-toolbar">
+    <div>
+        <h2>لیست کاربران</h2>
+        <p>کاربران ثبت‌شده در سیستم</p>
+    </div>
 
-        .button {
-            display:inline-block;
-            padding:10px 15px;
-            background:#1976d2;
-            color:white;
-            text-decoration:none;
-            border-radius:6px;
-            margin-bottom:20px;
-        }
-
-        table {
-            width:100%;
-            border-collapse:collapse;
-        }
-
-        th, td {
-            border:1px solid #ddd;
-            padding:12px;
-            text-align:center;
-        }
-
-        th {
-            background:#eee;
-        }
-
-        .delete {
-            color:red;
-            text-decoration:none;
-        }
-
-        .empty {
-            text-align:center;
-            padding:30px;
-            color:#777;
-        }
-
-    </style>
-</head>
-
-
-<body>
-
-<div class="card">
-
-<h2>👤 کاربران</h2>
-
-
-<a class="button" href="/admin/users/create">
-➕ ایجاد کاربر
-</a>
-
-
-<table>
-
-<tr>
-    <th>ID</th>
-    <th>نام کاربری</th>
-    <th>ایمیل</th>
-    <th>وضعیت</th>
-    <th>مدیر</th>
-    <th>تاریخ ایجاد</th>
-    <th>عملیات</th>
-</tr>
-
-
-{% if users %}
-
-{% for user in users %}
-
-<tr>
-
-<td>
-{{ user.id }}
-</td>
-
-
-<td>
-{{ user.username }}
-</td>
-
-
-<td>
-{{ user.email or "-" }}
-</td>
-
-
-<td>
-{% if user.is_active %}
-فعال
-{% else %}
-غیرفعال
-{% endif %}
-</td>
-
-
-<td>
-{% if user.is_superuser %}
-بله
-{% else %}
-خیر
-{% endif %}
-</td>
-
-
-<td>
-{{ user.created_at }}
-</td>
-
-
-<td>
-
-<a class="delete"
-href="/admin/users/{{ user.id }}/delete"
-onclick="return confirm('حذف شود؟');">
-🗑 حذف
-</a>
-
-</td>
-
-
-</tr>
-
-
-{% endfor %}
-
-
-{% else %}
-
-<tr>
-<td colspan="7" class="empty">
-هیچ کاربری وجود ندارد
-</td>
-</tr>
-
-{% endif %}
-
-
-</table>
-
-
-<br>
-
-<a href="/admin/dashboard">
-← بازگشت به داشبورد
-</a>
-
-
+    <a href="/admin/users/create" class="btn btn-primary">
+        <span>➕</span>
+        ایجاد کاربر
+    </a>
 </div>
 
-</body>
-</html>
+<section class="panel">
+
+    {% if users %}
+
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>نام کاربری</th>
+                    <th>ایمیل</th>
+                    <th>وضعیت</th>
+                    <th>مدیر</th>
+                    <th>تاریخ ایجاد</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>
+                        <span class="id-badge">#{{ user.id }}</span>
+                    </td>
+
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">
+                                {{ user.username[:1]|upper }}
+                            </div>
+                            <strong>{{ user.username }}</strong>
+                        </div>
+                    </td>
+
+                    <td>{{ user.email or "-" }}</td>
+
+                    <td>
+                        {% if user.is_active %}
+                            <span class="badge badge-success">فعال</span>
+                        {% else %}
+                            <span class="badge badge-danger">غیرفعال</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="badge badge-purple">Superuser</span>
+                        {% else %}
+                            <span class="muted">کاربر</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {{ user.created_at }}
+                    </td>
+
+                    <td>
+                        <div class="table-actions">
+                            <a
+                                href="/admin/users/{{ user.id }}/delete"
+                                class="btn btn-sm btn-danger-outline"
+                                onclick="return confirm('این کاربر حذف شود؟');"
+                            >
+                                🗑 حذف
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+        <span>👤</span>
+        <strong>هنوز کاربری وجود ندارد</strong>
+        <p>اولین کاربر را از طریق دکمه ایجاد کاربر اضافه کنید.</p>
+    </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

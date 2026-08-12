@@ -1,12 +1,52 @@
-﻿from fastapi.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
 
 client = TestClient(app)
 
-USERNAME = "admin"
-PASSWORD = "Admin123!"
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "Admin123!"
+
+USERNAME = ADMIN_USERNAME
+PASSWORD = ADMIN_PASSWORD
+
+
+def login(username: str, password: str) -> dict:
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "username": username,
+            "password": password,
+        },
+    )
+
+    assert response.status_code == 200, response.text
+
+    tokens = response.json()
+
+    return {
+        "Authorization": f"Bearer {tokens['access_token']}",
+    }
+
+
+def create_user(
+    headers: dict,
+    username: str,
+    password: str,
+) -> int:
+    response = client.post(
+        "/api/v1/users",
+        headers=headers,
+        json={
+            "username": username,
+            "password": password,
+        },
+    )
+
+    assert response.status_code in (200, 201), response.text
+
+    return response.json()["id"]
 
 
 def test_authentication_flow():
@@ -68,8 +108,6 @@ def test_authentication_flow():
 
     assert new_access_token
     assert new_refresh_token
-
-    print("PASS: Refresh token")
 
     new_headers = {
         "Authorization": f"Bearer {new_access_token}",

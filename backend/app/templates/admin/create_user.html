@@ -1,160 +1,66 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+﻿{% extends "admin/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
+{% block title %}ایجاد کاربر - AmneziaWG Panel{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block page_title %}ایجاد کاربر{% endblock %}
+{% block page_subtitle %}ثبت کاربر جدید در پنل{% endblock %}
 
-    <title>
-        ایجاد کاربر جدید - AmneziaWG Panel
-    </title>
+{% block content %}
 
-    <style>
+<section class="form-card">
 
-        body{
-            font-family:Tahoma,Arial,sans-serif;
-            max-width:700px;
-            margin:40px auto;
-            background:#f5f5f5;
-        }
-
-
-        .card{
-            background:#fff;
-            padding:30px;
-            border-radius:10px;
-            box-shadow:0 2px 10px rgba(0,0,0,.1);
-        }
-
-
-        h2{
-            margin-bottom:25px;
-        }
-
-
-        label{
-            display:block;
-            margin-top:15px;
-            margin-bottom:6px;
-            font-weight:bold;
-        }
-
-
-        input{
-            width:100%;
-            padding:10px;
-            border:1px solid #ccc;
-            border-radius:6px;
-            box-sizing:border-box;
-        }
-
-
-        .buttons{
-            margin-top:25px;
-        }
-
-
-        button{
-            padding:10px 20px;
-            cursor:pointer;
-            border:none;
-            border-radius:6px;
-        }
-
-
-        a{
-            margin-right:15px;
-            text-decoration:none;
-        }
-
-
-        .error{
-            background:#ffe5e5;
-            color:#b00000;
-            padding:10px;
-            border-radius:6px;
-            margin-bottom:20px;
-        }
-
-
-    </style>
-
-</head>
-
-
-<body>
-
-
-<div class="card">
-
-
-    <h2>
-        ➕ ایجاد کاربر جدید
-    </h2>
-
-
-    {% if error %}
-
-    <div class="error">
-        {{ error }}
+    <div class="form-header">
+        <div class="form-icon">👤</div>
+        <div>
+            <h2>ایجاد کاربر جدید</h2>
+            <p>اطلاعات ورود کاربر را وارد کنید.</p>
+        </div>
     </div>
 
+    {% if error %}
+        <div class="alert alert-danger">
+            ⚠️ {{ error }}
+        </div>
     {% endif %}
 
+    <form method="post" action="/admin/users/create" class="admin-form">
 
+        <div class="form-group">
+            <label for="username">نام کاربری</label>
+            <input
+                id="username"
+                type="text"
+                name="username"
+                placeholder="مثلاً ali"
+                autocomplete="username"
+                required
+            >
+        </div>
 
-    <form method="post" action="/admin/users/create">
+        <div class="form-group">
+            <label for="password">رمز عبور</label>
+            <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="رمز عبور"
+                autocomplete="new-password"
+                required
+            >
+        </div>
 
-
-        <label>
-            نام کاربری
-        </label>
-
-
-        <input
-            type="text"
-            name="username"
-            placeholder="username"
-            required
-        >
-
-
-
-        <label>
-            رمز عبور
-        </label>
-
-
-        <input
-            type="password"
-            name="password"
-            placeholder="password"
-            required
-        >
-
-
-
-        <div class="buttons">
-
-
-            <button type="submit">
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
                 💾 ذخیره کاربر
             </button>
 
-
-            <a href="/admin/users">
+            <a href="/admin/users" class="btn btn-secondary">
                 ← بازگشت
             </a>
-
-
         </div>
-
 
     </form>
 
+</section>
 
-</div>
-
-
-</body>
-
-</html>
+{% endblock %}

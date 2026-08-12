@@ -9,16 +9,16 @@ from collections.abc import AsyncGenerator
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.app.core.config import settings
 from backend.app.db.database import AsyncSessionLocal
-
 from backend.app.services import (
     ActivityLogService,
     PeerService,
     TrafficService,
     UserService,
 )
-
 from backend.app.services.auth import AuthService
+from backend.app.services.config_generator import ConfigGeneratorService
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
@@ -78,3 +78,16 @@ def get_auth_service(
     """
 
     return AuthService(session)
+
+
+def get_config_generator_service() -> ConfigGeneratorService:
+    """
+    Provide ConfigGeneratorService instance.
+
+    Configuration values are loaded from application settings.
+    """
+
+    return ConfigGeneratorService(
+        endpoint=settings.AWG_ENDPOINT,
+        server_public_key=settings.AWG_SERVER_PUBLIC_KEY,
+    )

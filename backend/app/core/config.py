@@ -17,7 +17,10 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+# -------------------------------------------------
 # Backend root directory
+# -------------------------------------------------
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -50,7 +53,6 @@ class Settings(BaseSettings):
         default=False
     )
 
-
     # -------------------------------------------------
     # Server
     # -------------------------------------------------
@@ -62,7 +64,6 @@ class Settings(BaseSettings):
     PORT: int = Field(
         default=8000
     )
-
 
     # -------------------------------------------------
     # Security / JWT
@@ -88,7 +89,6 @@ class Settings(BaseSettings):
         default=60
     )
 
-
     # -------------------------------------------------
     # Database
     # -------------------------------------------------
@@ -96,7 +96,6 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(
         default="sqlite:///./amnezia_panel.db"
     )
-
 
     # -------------------------------------------------
     # Logging
@@ -110,13 +109,20 @@ class Settings(BaseSettings):
         default="logs/app.log"
     )
 
-
     # -------------------------------------------------
     # AmneziaWG
     # -------------------------------------------------
 
     AWG_INTERFACE: str = Field(
         default="awg0"
+    )
+
+    AWG_ENDPOINT: str = Field(
+        default="YOUR_SERVER_IP:51820"
+    )
+
+    AWG_SERVER_PUBLIC_KEY: str = Field(
+        default="YOUR_SERVER_PUBLIC_KEY"
     )
 
     AWG_CONFIG_PATH: str = Field(
@@ -126,7 +132,6 @@ class Settings(BaseSettings):
     AWG_AUTO_SYNC: bool = Field(
         default=False
     )
-
 
     # -------------------------------------------------
     # Docker
@@ -144,7 +149,6 @@ class Settings(BaseSettings):
         default="amnezia-awg"
     )
 
-
     # -------------------------------------------------
     # Traffic
     # -------------------------------------------------
@@ -157,7 +161,6 @@ class Settings(BaseSettings):
         default="GB"
     )
 
-
     # -------------------------------------------------
     # Security Features
     # -------------------------------------------------
@@ -169,7 +172,6 @@ class Settings(BaseSettings):
     ENABLE_ACTIVITY_LOG: bool = Field(
         default=True
     )
-
 
     # -------------------------------------------------
     # Admin Bootstrap
@@ -187,7 +189,6 @@ class Settings(BaseSettings):
         default="change_this_password"
     )
 
-
     # -------------------------------------------------
     # Pydantic Settings Config
     # -------------------------------------------------
@@ -196,16 +197,21 @@ class Settings(BaseSettings):
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore"
+        extra="ignore",
     )
 
+
+# -------------------------------------------------
+# Cached settings
+# -------------------------------------------------
 
 @lru_cache
 def get_settings() -> Settings:
     """
-    Cached settings instance.
+    Return cached settings instance.
 
-    Prevents loading environment repeatedly.
+    Prevents loading environment configuration
+    repeatedly during application lifetime.
     """
 
     return Settings()

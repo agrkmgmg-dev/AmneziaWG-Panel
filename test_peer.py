@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+﻿from fastapi.testclient import TestClient
 
 from backend.app.main import app
 
@@ -121,8 +121,56 @@ def test_peer_api_flow():
     print("PASS: Get peer")
     print("PASS: Public key persisted")
     print("PASS: Private key remains hidden")
+        # 4.1 Download peer config
+    response = client.get(
+        f"/api/v1/peers/{peer_id}/config",
+        headers=headers,
+    )
 
-    # 5. Update peer
+    print(
+        f"\n[4.1] GET /peers/{peer_id}/config => "
+        f"{response.status_code}"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+
+    config = response.text
+
+    assert "[Interface]" in config
+    assert "[Peer]" in config
+    assert "PrivateKey =" in config
+    assert "Address = 10.0.0.10" in config
+    assert "PublicKey =" in config
+    assert "Endpoint =" in config
+    assert "AllowedIPs = 0.0.0.0/0, ::/0" in config
+    assert "PersistentKeepalive = 25" in config
+
+    print("PASS: Config generated")
+    print("PASS: Private key included only in config")
+    print("PASS: Address included")
+    print("PASS: Server public key included")
+    print("PASS: Endpoint included")
+
+    # 4.2 Download peer QR
+    response = client.get(
+        f"/api/v1/peers/{peer_id}/qr",
+        headers=headers,
+    )
+
+    print(
+        f"\n[4.2] GET /peers/{peer_id}/qr => "
+        f"{response.status_code}"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("image/png")
+    assert response.content
+    assert response.content.startswith(b"\x89PNG")
+
+    print("PASS: QR generated")
+    print("PASS: QR is valid PNG")
+# 5. Update peer
     response = client.put(
         f"/api/v1/peers/{peer_id}",
         headers=headers,
@@ -232,3 +280,7 @@ def test_peer_api_flow():
     print("\n" + "=" * 60)
     print("ALL PEER API TESTS PASSED")
     print("=" * 60)
+
+
+
+

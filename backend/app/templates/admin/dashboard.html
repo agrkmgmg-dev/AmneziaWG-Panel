@@ -1,76 +1,190 @@
-<!DOCTYPE html>
-<html lang="fa" dir="rtl">
+﻿{% extends "admin/base.html" %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>AmneziaWG Panel - Dashboard</title>
+{% block title %}داشبورد - AmneziaWG Panel{% endblock %}
+{% block nav_dashboard %}active{% endblock %}
+{% block page_title %}داشبورد{% endblock %}
+{% block page_subtitle %}نمای کلی سرور و سرویس VPN{% endblock %}
 
-    <link rel="stylesheet" href="/static/css/admin.css">
-</head>
+{% block content %}
 
-<body>
+<div class="stats-grid">
 
-<div class="container">
-
-    <header class="dashboard-header">
-        <h1>AmneziaWG Panel</h1>
-        <p>پنل مدیریت سرور VPN</p>
-    </header>
-
-
-    <section class="cards">
-
-        <div class="card">
-            <h3>👤 کاربران</h3>
-            <span>{{ users_count }}</span>
+    <div class="stat-card">
+        <div class="stat-icon blue">👤</div>
+        <div>
+            <span class="stat-label">کاربران</span>
+            <strong>{{ users_count }}</strong>
         </div>
+    </div>
 
-
-        <div class="card">
-            <h3>🔑 کلاینت‌ها</h3>
-            <span>{{ peers_count }}</span>
+    <div class="stat-card">
+        <div class="stat-icon purple">🔑</div>
+        <div>
+            <span class="stat-label">کلاینت‌ها</span>
+            <strong>{{ peers_count }}</strong>
         </div>
+    </div>
 
-
-        <div class="card">
-            <h3>📊 ترافیک</h3>
-            <span>{{ traffic_count }}</span>
+    <div class="stat-card">
+        <div class="stat-icon green">📊</div>
+        <div>
+            <span class="stat-label">رکوردهای ترافیک</span>
+            <strong>{{ traffic_count }}</strong>
         </div>
+    </div>
 
-
-        <div class="card">
-            <h3>📝 لاگ‌ها</h3>
-            <span>{{ logs_count }}</span>
+    <div class="stat-card">
+        <div class="stat-icon orange">📝</div>
+        <div>
+            <span class="stat-label">لاگ‌های فعالیت</span>
+            <strong>{{ logs_count }}</strong>
         </div>
-
-    </section>
-
-
-    <section class="panel">
-
-        <h2>وضعیت سیستم</h2>
-
-        <div class="status">
-            <span class="online"></span>
-            Dashboard فعال است
-        </div>
-
-    </section>
-
-
-    <section class="panel">
-
-        <h2>آخرین فعالیت‌ها</h2>
-
-        <p>
-            هنوز فعالیتی ثبت نشده است.
-        </p>
-
-    </section>
-
+    </div>
 
 </div>
 
-</body>
+<div class="grid-2">
 
-</html>
+    <section class="panel">
+
+        <div class="panel-header">
+            <div>
+                <h2>وضعیت سیستم</h2>
+                <p>وضعیت سرویس پنل</p>
+            </div>
+
+            <span class="badge badge-success">ONLINE</span>
+        </div>
+
+        <div class="system-status">
+            <span class="status-dot online"></span>
+
+            <div>
+                <strong>Dashboard فعال است</strong>
+                <span>Backend و پنل وب در دسترس هستند.</span>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="panel">
+
+        <div class="panel-header">
+            <div>
+                <h2>IP Pool</h2>
+                <p>وضعیت آدرس‌های VPN</p>
+            </div>
+        </div>
+
+        <div class="system-status">
+            <div>
+                <strong>
+                    {{ ip_pool.used if ip_pool and ip_pool.used is defined else "-" }}
+                    استفاده‌شده
+                </strong>
+
+                <span>
+                    {{ ip_pool.available if ip_pool and ip_pool.available is defined else "-" }}
+                    آدرس آزاد
+                </span>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+<section class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>دسترسی سریع</h2>
+            <p>عملیات پرکاربرد مدیریت</p>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+
+        <a href="/admin/users/create" class="action-card">
+            <span>👤</span>
+            <strong>ایجاد کاربر</strong>
+        </a>
+
+        <a href="/admin/peers/create" class="action-card">
+            <span>🔑</span>
+            <strong>ایجاد کلاینت</strong>
+        </a>
+
+        <a href="/admin/users" class="action-card">
+            <span>📋</span>
+            <strong>مدیریت کاربران</strong>
+        </a>
+
+        <a href="/admin/peers" class="action-card">
+            <span>🖥️</span>
+            <strong>مدیریت کلاینت‌ها</strong>
+        </a>
+
+    </div>
+
+</section>
+
+<section class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>آخرین فعالیت‌ها</h2>
+            <p>آخرین رویدادهای ثبت‌شده</p>
+        </div>
+
+        <span class="muted">
+            {{ recent_logs|length if recent_logs else 0 }} رویداد
+        </span>
+    </div>
+
+    {% if recent_logs %}
+
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>رویداد</th>
+                        <th>کاربر</th>
+                        <th>زمان</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for log in recent_logs %}
+                    <tr>
+                        <td>
+                            <span class="id-badge">#{{ log.id }}</span>
+                        </td>
+
+                        <td>{{ log.action or log.event or "-" }}</td>
+
+                        <td>{{ log.username or log.user_id or "-" }}</td>
+
+                        <td>{{ log.created_at or "-" }}</td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+            </table>
+        </div>
+
+    {% else %}
+
+        <div class="empty-state">
+            <span>📝</span>
+            <strong>هنوز فعالیتی ثبت نشده است</strong>
+            <p>پس از ثبت رویدادها، اینجا نمایش داده می‌شوند.</p>
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}
