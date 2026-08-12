@@ -42,3 +42,6 @@ __pycache__/
 .env.*
 *.db
 logs/
+
+backend/app/static/qr/*.png
+backend/app/api/v1/*.bak
