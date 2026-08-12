@@ -11,9 +11,12 @@ class PeerBase(BaseModel):
         description="Peer display name",
     )
 
-    address: str = Field(
-        ...,
-        description="WireGuard client address",
+    address: str | None = Field(
+        default=None,
+        description=(
+            "WireGuard client address. "
+            "Automatically assigned if omitted."
+        ),
     )
 
     expires_at: datetime | None = Field(

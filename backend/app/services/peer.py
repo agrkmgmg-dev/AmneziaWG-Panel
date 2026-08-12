@@ -13,8 +13,9 @@ from backend.app.schemas.peer import (
     PeerResponse,
     PeerUpdate,
 )
-
 from backend.app.services.base import BaseService
+from backend.app.services.ip_manager import IPManagerService
+from backend.app.services.key_generator import KeyGeneratorService
 
 
 class PeerService(BaseService):
@@ -38,6 +39,12 @@ class PeerService(BaseService):
         )
 
         self.repository = repository
+
+        self.key_generator = KeyGeneratorService()
+
+        self.ip_manager = IPManagerService(
+            peer_repository=self.repository,
+        )
 
     async def get_by_id(
         self,
@@ -89,6 +96,9 @@ class PeerService(BaseService):
     ) -> PeerResponse:
         """
         Create a new peer.
+
+        Generates a real WireGuard key pair and
+        automatically allocates an available IP address.
         """
 
         existing_peer = await self.repository.get_by_name(
@@ -100,12 +110,22 @@ class PeerService(BaseService):
                 "Peer name already exists"
             )
 
+        private_key, public_key = (
+            self.key_generator.generate_keypair()
+        )
+
+        address = data.address
+
+        if not address:
+            address = await self.ip_manager.get_next_ip()
+
         peer = Peer(
             user_id=data.user_id,
             name=data.name,
-            address=data.address,
+            address=address,
             expires_at=data.expires_at,
-            public_key="pending",
+            private_key=private_key,
+            public_key=public_key,
         )
 
         peer = await self.repository.create(peer)
@@ -149,6 +169,50 @@ class PeerService(BaseService):
 
         if data.expires_at is not None:
             peer.expires_at = data.expires_at
+
+        await self.commit()
+        await self.refresh(peer)
+
+        return PeerResponse.model_validate(peer)
+
+    async def enable(
+        self,
+        peer_id: int,
+    ) -> PeerResponse | None:
+        """
+        Enable a peer.
+
+        Sets the peer status to active.
+        """
+
+        peer = await self.repository.get_by_id(peer_id)
+
+        if peer is None:
+            return None
+
+        peer.is_active = True
+
+        await self.commit()
+        await self.refresh(peer)
+
+        return PeerResponse.model_validate(peer)
+
+    async def disable(
+        self,
+        peer_id: int,
+    ) -> PeerResponse | None:
+        """
+        Disable a peer.
+
+        Sets the peer status to inactive.
+        """
+
+        peer = await self.repository.get_by_id(peer_id)
+
+        if peer is None:
+            return None
+
+        peer.is_active = False
 
         await self.commit()
         await self.refresh(peer)
