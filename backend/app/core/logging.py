@@ -15,7 +15,7 @@ import logging.handlers
 import sys
 from pathlib import Path
 
-from backend.app.core.config import settings
+from backend.app.core.config import BASE_DIR, settings
 
 
 LOG_FORMAT = (
@@ -79,9 +79,9 @@ def setup_logging() -> None:
     # File Handler
     # -----------------------------
 
-    log_file = Path(
-        settings.LOG_FILE
-    )
+    log_file = Path(settings.LOG_FILE)
+    if not log_file.is_absolute():
+        log_file = BASE_DIR / log_file
 
     log_file.parent.mkdir(
         parents=True,

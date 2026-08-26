@@ -4,6 +4,7 @@ AmneziaWG Config Generator Service.
 
 from pathlib import Path
 
+from backend.app.core.config import BASE_DIR, settings
 from backend.app.models.peer import Peer
 from backend.app.utils.qr import generate_qr
 
@@ -15,15 +16,18 @@ class ConfigGeneratorService:
 
     def __init__(
         self,
-        endpoint: str,
-        server_public_key: str,
+        endpoint: str | None = None,
+        server_public_key: str | None = None,
     ) -> None:
-        self.endpoint = endpoint
-        self.server_public_key = server_public_key
-
-        self.qr_path = Path(
-            "backend/app/static/qr"
+        self.endpoint = endpoint or settings.AWG_ENDPOINT
+        self.server_public_key = (
+            server_public_key or settings.AWG_SERVER_PUBLIC_KEY
         )
+
+        # Resolve from the package location rather than the process cwd so
+        # QR generation works under systemd, Docker, and ``uvicorn`` started
+        # from any directory.
+        self.qr_path = BASE_DIR / "app" / "static" / "qr"
 
         self.qr_path.mkdir(
             parents=True,

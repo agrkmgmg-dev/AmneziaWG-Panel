@@ -21,6 +21,9 @@
         <strong>نکته:</strong>
         آدرس IP و کلیدهای WireGuard به‌صورت خودکار توسط سیستم مدیریت می‌شوند.
     </div>
+    {% if error %}
+    <div class="error-box">⚠️ {{ error }}</div>
+    {% endif %}
 
     <form action="/admin/peers/create" method="post" class="admin-form">
 

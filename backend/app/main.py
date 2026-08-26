@@ -3,6 +3,7 @@ FastAPI application entry point.
 """
 
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -54,10 +55,25 @@ def create_application() -> FastAPI:
 
     app = FastAPI(
         title="AmneziaWG Panel",
-        version="0.4.0",
+        version=settings.APP_VERSION,
         lifespan=lifespan,
     )
 
+    @app.get("/", tags=["health"])
+    async def health_check() -> dict[str, str]:
+        """Return a lightweight liveness response for load balancers."""
+
+        return {
+            "status": "ok",
+            "service": settings.APP_NAME,
+            "version": settings.APP_VERSION,
+        }
+
+    @app.get("/health", tags=["health"])
+    async def health() -> dict[str, str]:
+        """Alias for deployments that conventionally probe ``/health``."""
+
+        return {"status": "ok"}
 
     # Session middleware for admin authentication
     app.add_middleware(
@@ -70,7 +86,9 @@ def create_application() -> FastAPI:
     app.mount(
         "/static",
         StaticFiles(
-            directory="backend/app/static",
+            directory=str(
+                Path(__file__).resolve().parent / "static"
+            ),
         ),
         name="static",
     )

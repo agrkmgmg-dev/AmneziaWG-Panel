@@ -26,8 +26,9 @@ from backend.app.services.config_generator import ConfigGeneratorService
 from backend.app.services.dashboard import DashboardService
 from backend.app.services.traffic import TrafficService
 from backend.app.services.activity_log import ActivityLogService
-from backend.app.services.auth import AuthService
 from backend.app.services.admin_logging import log_admin_action
+from backend.app.core.config import settings
+from backend.app.services.auth import AuthService
 router = APIRouter(
     prefix="/admin",
     tags=["Admin"],
@@ -81,8 +82,8 @@ async def get_admin_activity_log_service(
 async def get_config_service() -> ConfigGeneratorService:
 
     return ConfigGeneratorService(
-        endpoint="YOUR_SERVER_IP:51820",
-        server_public_key="YOUR_SERVER_PUBLIC_KEY",
+        endpoint=settings.AWG_ENDPOINT,
+        server_public_key=settings.AWG_SERVER_PUBLIC_KEY,
     )
 
 
@@ -162,20 +163,16 @@ async def login(
     session: AsyncSession = Depends(get_db),
 ):
 
-    service = AuthService(session)
-
-    user = await service.authenticate(
-        username,
-        password,
-    )
-
+    user = await AuthService(session).authenticate(username, password)
     if user is not None and user.is_superuser:
+
         login_admin(request)
 
         return RedirectResponse(
             url="/admin/dashboard",
             status_code=302,
         )
+
 
     return templates.TemplateResponse(
         request=request,
@@ -426,11 +423,19 @@ async def create_peer(
     else:
         expires_at = None
 
-    await service.create_peer(
-        user_id=user_id,
-        name=name,
-        expires_at=expires_at,
-    )
+    try:
+        await service.create_peer(
+            user_id=user_id,
+            name=name,
+            expires_at=expires_at,
+        )
+    except ValueError as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/create_peer.html",
+            context={"request": request, "error": str(exc)},
+            status_code=400,
+        )
 
     return RedirectResponse(
         url="/admin/peers",

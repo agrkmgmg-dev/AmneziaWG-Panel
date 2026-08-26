@@ -26,11 +26,17 @@ api_router = APIRouter(
     tags=["API v1"],
 )
 
+_routers_registered = False
+
 
 def register_routers() -> None:
     """
     Register API v1 routers.
     """
+
+    global _routers_registered
+    if _routers_registered:
+        return
 
     api_router.include_router(
         auth_router,
@@ -51,3 +57,5 @@ def register_routers() -> None:
     api_router.include_router(
         activity_logs_router,
     )
+
+    _routers_registered = True

@@ -100,6 +100,12 @@ class AdminPeerService:
         Create a peer with automatic keys and IP.
         """
 
+        existing = await self.peer_repository.get_by_user(user_id)
+        if existing:
+            raise ValueError(
+                "Each user is limited to one VPN device"
+            )
+
         key_service = KeyGeneratorService()
 
         ip_service = IPManagerService(
