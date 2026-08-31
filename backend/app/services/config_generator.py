@@ -45,6 +45,17 @@ class ConfigGeneratorService:
         config = f"""[Interface]
 PrivateKey = {peer.private_key}
 Address = {peer.address}
+Jc = {settings.AWG_JC}
+Jmin = {settings.AWG_JMIN}
+Jmax = {settings.AWG_JMAX}
+S1 = {settings.AWG_S1}
+S2 = {settings.AWG_S2}
+S3 = {settings.AWG_S3}
+S4 = {settings.AWG_S4}
+H1 = {settings.AWG_H1}
+H2 = {settings.AWG_H2}
+H3 = {settings.AWG_H3}
+H4 = {settings.AWG_H4}
 
 [Peer]
 PublicKey = {self.server_public_key}

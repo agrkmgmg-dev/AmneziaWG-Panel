@@ -125,6 +125,19 @@ class Settings(BaseSettings):
         default="YOUR_SERVER_PUBLIC_KEY"
     )
 
+    # These values must match the AmneziaWG server interface.
+    AWG_JC: int = 4
+    AWG_JMIN: int = 10
+    AWG_JMAX: int = 50
+    AWG_S1: int = 137
+    AWG_S2: int = 74
+    AWG_S3: int = 53
+    AWG_S4: int = 15
+    AWG_H1: str = "2017144549-2042225066"
+    AWG_H2: str = "2089336351-2107400414"
+    AWG_H3: str = "2117691830-2138717323"
+    AWG_H4: str = "2142969761-2146862938"
+
     AWG_CONFIG_PATH: str = Field(
         default="/etc/amnezia/amneziawg/awg0.conf"
     )
