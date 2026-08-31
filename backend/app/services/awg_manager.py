@@ -20,6 +20,11 @@ class AWGManagerService:
         if response.startswith("ERROR"):
             raise RuntimeError(response)
 
+    def add_peer(self, public_key: str, allowed_ips: str) -> None:
+        response = self._request(f"add {public_key} {allowed_ips}")
+        if response.startswith("ERROR"):
+            raise RuntimeError(response)
+
     def set_rate_limit(self, address: str, mbps: int = 15) -> None:
         from backend.app.services.rate_limit import peer_rate_request
 

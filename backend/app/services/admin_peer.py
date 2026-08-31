@@ -19,6 +19,7 @@ from backend.app.services.usage_limit import UsageLimitService
 from backend.app.services.config_import import parse_config
 from backend.app.core.security import hash_password
 from backend.app.repositories.user import UserRepository
+from backend.app.services.awg_manager import AWGManagerService
 
 
 class AdminPeerService:
@@ -75,6 +76,12 @@ class AdminPeerService:
         )
         await self.peer_repository.create(peer)
         await self.session.refresh(peer)
+        try:
+            AWGManagerService().add_peer(peer.public_key, peer.address)
+        except Exception:
+            # Keep the database record; reconciliation can retry when the
+            # host helper is temporarily unavailable.
+            pass
         return peer
 
     async def _attach_status(

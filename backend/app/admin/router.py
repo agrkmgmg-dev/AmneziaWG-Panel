@@ -315,6 +315,9 @@ async def create_user(
     service: AdminUserService = Depends(
         get_admin_user_service
     ),
+    peer_service: AdminPeerService = Depends(
+        get_admin_peer_service
+    ),
 ):
 
     if not is_admin_authenticated(request):
@@ -337,6 +340,15 @@ async def create_user(
                 "error": "این نام کاربری قبلا ثبت شده است",
             },
         )
+
+    try:
+        await peer_service.create_peer(
+            user_id=user.id,
+            name=username,
+        )
+    except ValueError:
+        # User creation remains successful if a duplicate/legacy peer exists.
+        pass
 
     return RedirectResponse(
         url="/admin/users",
