@@ -16,6 +16,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,6 +37,8 @@ private fun LoginScreen() {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("ورود برای اتصال امن") }
+    val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -57,10 +61,25 @@ private fun LoginScreen() {
         )
         Button(
             onClick = {
-                message = if (username.isBlank() || password.isBlank()) {
-                    "نام کاربری و رمز عبور را وارد کنید"
+                if (username.isBlank() || password.isBlank()) {
+                    message = "نام کاربری و رمز عبور را وارد کنید"
                 } else {
-                    "اتصال API در مرحله‌ی بعد فعال می‌شود"
+                    message = "در حال ثبت دستگاه..."
+                    scope.launch(Dispatchers.IO) {
+                        try {
+                            val api = ApiClient()
+                            val token = api.login(username, password)
+                            val keys = DeviceKeyStore(context).getOrCreate()
+                            val config = api.bindDevice(token, keys.publicKey)
+                            launch(Dispatchers.Main) {
+                                message = "دستگاه ثبت شد؛ Peer #${config.peerId} آماده‌ی اتصال است"
+                            }
+                        } catch (error: Exception) {
+                            launch(Dispatchers.Main) {
+                                message = error.message ?: "خطا در ثبت دستگاه"
+                            }
+                        }
+                    }
                 }
             },
         ) {
