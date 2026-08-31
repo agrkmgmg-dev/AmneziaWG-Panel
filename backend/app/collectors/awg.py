@@ -5,6 +5,7 @@ Supports real AWG mode and development mock mode.
 """
 
 import subprocess
+import socket
 from shutil import which
 
 
@@ -19,6 +20,7 @@ class AWGCollector:
     ) -> None:
 
         self.interface = interface
+        self.socket_path = "/run/amneziawg-panel/awg.sock"
         self.mock_mode = which("awg") is None
 
 
@@ -26,6 +28,27 @@ class AWGCollector:
         """
         Get AWG dump output.
         """
+
+        # In production the panel container cannot see the host network
+        # namespace. Read the authoritative dump through the host helper.
+        try:
+            sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            sock.connect(self.socket_path)
+            sock.sendall(b"dump")
+            sock.shutdown(socket.SHUT_WR)
+            response = b""
+            while True:
+                chunk = sock.recv(65536)
+                if not chunk:
+                    break
+                response += chunk
+            sock.close()
+            text = response.decode("utf-8", errors="replace")
+            if text and not text.startswith("ERROR"):
+                return text
+        except (OSError, socket.timeout):
+            pass
 
         if self.mock_mode:
             return self.mock_dump()
