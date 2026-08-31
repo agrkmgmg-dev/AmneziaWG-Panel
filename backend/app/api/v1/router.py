@@ -19,6 +19,9 @@ from backend.app.api.v1.traffic import (
 from backend.app.api.v1.auth import (
     router as auth_router,
 )
+from backend.app.api.v1.devices import (
+    router as devices_router,
+)
 
 
 api_router = APIRouter(
@@ -40,6 +43,10 @@ def register_routers() -> None:
 
     api_router.include_router(
         auth_router,
+    )
+
+    api_router.include_router(
+        devices_router,
     )
 
     api_router.include_router(

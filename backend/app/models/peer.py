@@ -71,6 +71,18 @@ class Peer(Base):
         nullable=True,
     )
 
+    device_public_key: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        unique=True,
+        index=True,
+    )
+
+    device_bound_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
 
     address: Mapped[str] = mapped_column(
         String(50),
