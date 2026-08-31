@@ -3,6 +3,7 @@ IP Manager Service.
 """
 
 from backend.app.services.ip_pool import IPPoolService
+from backend.app.collectors.awg import AWGCollector
 
 
 class IPManagerService:
@@ -30,12 +31,40 @@ class IPManagerService:
 
         peers = await self.peer_repository.get_all()
 
-        used_ips = [
+        used_ips = {
             peer.address
             for peer in peers
             if peer.address
-        ]
+        }
+
+        # The database may not contain peers created by the original
+        # Amnezia installation. Reserve addresses reported by live AWG too,
+        # otherwise a newly generated config can collide with an old peer.
+        try:
+            collector = AWGCollector()
+            live_ips = (
+                {
+                    item["address"]
+                    for item in collector.collect()
+                    if item.get("address")
+                }
+                if not collector.mock_mode
+                else set()
+            )
+            used_ips.update(live_ips)
+            # Existing Amnezia installations use 10.8.1.0/24. Keep the
+            # legacy 10.0.0.0/24 default for isolated tests/dev instances,
+            # but allocate from the live network in production.
+            if any(ip.startswith("10.8.1.") for ip in live_ips):
+                self.pool = IPPoolService(
+                    subnet="10.8.1.0/24",
+                    server_ip="10.8.1.1",
+                )
+        except Exception:
+            # Allocation must remain available in development/test mode when
+            # the AWG binary or control socket is unavailable.
+            pass
 
         return self.pool.get_next_ip(
-            used_ips
+            list(used_ips)
         )
