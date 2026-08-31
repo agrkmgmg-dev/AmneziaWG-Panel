@@ -21,4 +21,8 @@
 ./gradlew assembleDebug
 ```
 
+همچنین Workflow گیت‌هاب با هر Push روی `main`، فایل `app-debug.apk` را
+به‌صورت Artifact می‌سازد. برای اجرای دستی از تب Actions، گزینه‌ی **Build
+Android APK** و سپس **Run workflow** را انتخاب کنید.
+
 اتصال واقعی AmneziaWG و ثبت کلید دستگاه بعد از آماده‌شدن endpointهای Device Binding پنل اضافه می‌شود.
