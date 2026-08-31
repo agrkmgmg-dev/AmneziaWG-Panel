@@ -4,7 +4,7 @@ Admin dashboard and authentication router.
 
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Form, Request
+from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import (
     FileResponse,
     HTMLResponse,
@@ -398,8 +398,50 @@ async def create_peer_page(
         name="admin/create_peer.html",
         context={
             "request": request,
+            "error": None,
         },
     )
+
+
+@router.get("/peers/import", response_class=HTMLResponse)
+async def import_peer_page(request: Request):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/import_peer.html",
+        context={"request": request, "error": None},
+    )
+
+
+@router.post("/peers/import")
+async def import_peer(
+    request: Request,
+    username: str = Form(...),
+    name: str = Form(...),
+    config: UploadFile = File(...),
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    if not config.filename or not config.filename.lower().endswith(".conf"):
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/import_peer.html",
+            context={"request": request, "error": "فقط فایل .conf مجاز است"},
+            status_code=400,
+        )
+    try:
+        text = (await config.read()).decode("utf-8")
+        await service.import_config(username, name, text)
+    except (UnicodeDecodeError, ValueError, RuntimeError) as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/import_peer.html",
+            context={"request": request, "error": str(exc)},
+            status_code=400,
+        )
+    return RedirectResponse(url="/admin/peers", status_code=302)
 @router.post("/peers/create")
 async def create_peer(
     request: Request,

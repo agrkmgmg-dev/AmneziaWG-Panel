@@ -15,6 +15,9 @@ from backend.app.services.expiration import ExpirationService
 from backend.app.services.ip_manager import IPManagerService
 from backend.app.services.key_generator import KeyGeneratorService
 from backend.app.services.usage_limit import UsageLimitService
+from backend.app.services.config_import import parse_config
+from backend.app.core.security import hash_password
+from backend.app.repositories.user import UserRepository
 
 
 class AdminPeerService:
@@ -35,6 +38,43 @@ class AdminPeerService:
         self.usage_service = UsageLimitService(
             TrafficRepository(session)
         )
+        self.user_repository = UserRepository(session)
+
+    async def import_config(
+        self,
+        username: str,
+        name: str,
+        config_text: str,
+        expires_at=None,
+    ) -> Peer:
+        """Import an existing client config and preserve its key material."""
+        parsed = parse_config(config_text)
+        user = await self.user_repository.get_by_username(username)
+        if user is None:
+            user = UserRepository(self.session).model(
+                username=username,
+                hashed_password=hash_password(f"imported-{username}-disabled"),
+                is_active=True,
+            )
+            user = await self.user_repository.create(user)
+        if await self.peer_repository.get_by_user(user.id):
+            raise ValueError("این کاربر قبلاً یک دستگاه دارد")
+        public_key = KeyGeneratorService.generate_public_key(parsed.private_key)
+        existing = await self.peer_repository.get_by_public_key(public_key)
+        if existing:
+            raise ValueError("این کانفیگ قبلاً وارد شده است")
+        peer = Peer(
+            user_id=user.id,
+            name=name,
+            public_key=public_key,
+            private_key=parsed.private_key,
+            address=parsed.address,
+            expires_at=expires_at,
+            is_active=True,
+        )
+        await self.peer_repository.create(peer)
+        await self.session.refresh(peer)
+        return peer
 
     async def _attach_status(
         self,

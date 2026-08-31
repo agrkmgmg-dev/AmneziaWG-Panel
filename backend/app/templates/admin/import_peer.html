@@ -1,0 +1,16 @@
+{% extends "admin/base.html" %}
+{% block title %}ورود کانفیگ{% endblock %}
+{% block nav_peers %}active{% endblock %}
+{% block page_title %}ورود کانفیگ AmneziaWG{% endblock %}
+{% block page_subtitle %}ثبت کانفیگ‌های قبلی بدون تغییر کلیدها{% endblock %}
+{% block content %}
+<section class="form-card">
+  {% if error %}<div class="error-box">⚠️ {{ error }}</div>{% endif %}
+  <form action="/admin/peers/import" method="post" enctype="multipart/form-data" class="admin-form">
+    <div class="form-group"><label>نام کاربری</label><input name="username" required placeholder="مثلاً safari1"></div>
+    <div class="form-group"><label>نام کلاینت</label><input name="name" required placeholder="مثلاً Safari 1"></div>
+    <div class="form-group"><label>فایل کانفیگ</label><input type="file" name="config" accept=".conf" required></div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">📥 ورود</button><a class="btn btn-secondary" href="/admin/peers">بازگشت</a></div>
+  </form>
+</section>
+{% endblock %}
