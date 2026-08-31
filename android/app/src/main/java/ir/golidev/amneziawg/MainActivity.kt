@@ -71,8 +71,9 @@ private fun LoginScreen() {
                             val token = api.login(username, password)
                             val keys = DeviceKeyStore(context).getOrCreate()
                             val config = api.bindDevice(token, keys.publicKey)
+                            val profile = config.toClientConfig(keys.privateKey).asText()
                             launch(Dispatchers.Main) {
-                                message = "دستگاه ثبت شد؛ Peer #${config.peerId} آماده‌ی اتصال است"
+                                message = "دستگاه ثبت شد؛ پروفایل Peer #${config.peerId} آماده است (${profile.length} بایت)"
                             }
                         } catch (error: Exception) {
                             launch(Dispatchers.Main) {
