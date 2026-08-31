@@ -20,6 +20,9 @@ class ApiClient(
 ) {
     private val jsonType = "application/json".toMediaType()
 
+    fun profile(token: String, config: DeviceConfig, privateKey: String): String =
+        config.toClientConfig(privateKey).asText()
+
     fun login(username: String, password: String): String {
         val body = JSONObject()
             .put("username", username)

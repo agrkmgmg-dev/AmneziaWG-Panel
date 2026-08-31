@@ -37,8 +37,10 @@ private fun LoginScreen() {
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var message by remember { mutableStateOf("ورود برای اتصال امن") }
+    var loggedIn by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val session = remember { SessionStore(context) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -69,11 +71,13 @@ private fun LoginScreen() {
                         try {
                             val api = ApiClient()
                             val token = api.login(username, password)
+                            session.token = token
                             val keys = DeviceKeyStore(context).getOrCreate()
                             val config = api.bindDevice(token, keys.publicKey)
                             val profile = config.toClientConfig(keys.privateKey).asText()
                             launch(Dispatchers.Main) {
                                 message = "دستگاه ثبت شد؛ پروفایل Peer #${config.peerId} آماده است (${profile.length} بایت)"
+                                loggedIn = true
                             }
                         } catch (error: Exception) {
                             launch(Dispatchers.Main) {
@@ -85,6 +89,15 @@ private fun LoginScreen() {
             },
         ) {
             Text("ورود")
+        }
+        if (loggedIn) {
+            Button(onClick = {
+                session.clear()
+                loggedIn = false
+                message = "نشست پاک شد"
+            }) {
+                Text("خروج از حساب")
+            }
         }
     }
 }
