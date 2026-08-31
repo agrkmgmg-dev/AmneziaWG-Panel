@@ -133,6 +133,14 @@ class Settings(BaseSettings):
         default=False
     )
 
+    # Per-peer bandwidth ceiling in megabits per second. Applied by the
+    # host-side traffic shaper; zero disables shaping.
+    AWG_PEER_RATE_LIMIT_MBPS: int = Field(
+        default=15,
+        ge=0,
+        le=10000,
+    )
+
     # -------------------------------------------------
     # Docker
     # -------------------------------------------------

@@ -11,6 +11,7 @@ from backend.app.services.traffic_sync import TrafficSyncService
 from backend.app.services.awg_manager import AWGManagerService
 from backend.app.services.expiration import ExpirationService
 from backend.app.repositories.peer import PeerRepository
+from backend.app.core.config import settings
 
 
 class TrafficScheduler:
@@ -48,6 +49,14 @@ class TrafficScheduler:
                     # AmneziaWG while their database record is retained.
                     manager = AWGManagerService()
                     for peer in await PeerRepository(session).get_all():
+                        if peer.is_active and settings.AWG_PEER_RATE_LIMIT_MBPS:
+                            try:
+                                manager.set_rate_limit(
+                                    peer.address,
+                                    settings.AWG_PEER_RATE_LIMIT_MBPS,
+                                )
+                            except Exception:
+                                pass
                         if peer.is_active and ExpirationService.is_expired(
                             peer.expires_at
                         ):
