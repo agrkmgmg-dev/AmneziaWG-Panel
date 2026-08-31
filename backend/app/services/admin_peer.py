@@ -5,6 +5,7 @@ Provides peer management operations used by the
 server-side Admin Panel.
 """
 
+from datetime import datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.peer import Peer
@@ -196,3 +197,21 @@ class AdminPeerService:
         await self.session.commit()
 
         return True
+
+    async def extend_peer(
+        self,
+        peer_id: int,
+        days: int,
+    ) -> Peer | None:
+        if days not in {7, 30, 90, 365}:
+            raise ValueError("مدت تمدید نامعتبر است")
+        peer = await self.peer_repository.get_by_id(peer_id)
+        if peer is None:
+            return None
+        now = datetime.utcnow()
+        base = peer.expires_at if peer.expires_at and peer.expires_at > now else now
+        peer.expires_at = base + timedelta(days=days)
+        peer.is_active = True
+        await self.session.commit()
+        await self.session.refresh(peer)
+        return peer

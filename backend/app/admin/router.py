@@ -506,6 +506,19 @@ async def delete_peer(
         status_code=302,
     )
 
+
+@router.get("/peers/{peer_id}/extend/{days}")
+async def extend_peer(
+    peer_id: int,
+    days: int,
+    request: Request,
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    await service.extend_peer(peer_id, days)
+    return RedirectResponse(url="/admin/peers", status_code=302)
+
 # =====================================================
 # Logout
 # =====================================================
