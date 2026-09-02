@@ -17,5 +17,13 @@ class SessionStore(context: Context) {
         get() = prefs.getString("access_token", null)
         set(value) = prefs.edit().putString("access_token", value).apply()
 
+    var profile: String?
+        get() = prefs.getString("profile", null)
+        set(value) = prefs.edit().putString("profile", value).apply()
+
+    var peerId: Int
+        get() = prefs.getInt("peer_id", -1)
+        set(value) = prefs.edit().putInt("peer_id", value).apply()
+
     fun clear() = prefs.edit().clear().apply()
 }

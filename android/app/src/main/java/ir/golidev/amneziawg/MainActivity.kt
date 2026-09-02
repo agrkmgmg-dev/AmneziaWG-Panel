@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -41,6 +42,7 @@ private fun LoginScreen() {
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
     val session = remember { SessionStore(context) }
+    var peerId by remember { mutableIntStateOf(session.peerId) }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),
@@ -75,8 +77,11 @@ private fun LoginScreen() {
                             val keys = DeviceKeyStore(context).getOrCreate()
                             val config = api.bindDevice(token, keys.publicKey)
                             val profile = config.toClientConfig(keys.privateKey).asText()
+                            session.profile = profile
+                            session.peerId = config.peerId
                             launch(Dispatchers.Main) {
-                                message = "دستگاه ثبت شد؛ پروفایل Peer #${config.peerId} آماده است (${profile.length} بایت)"
+                                peerId = config.peerId
+                                message = "دستگاه ثبت شد؛ Peer #${config.peerId} آماده‌ی اتصال است"
                                 loggedIn = true
                             }
                         } catch (error: Exception) {
@@ -91,12 +96,23 @@ private fun LoginScreen() {
             Text("ورود")
         }
         if (loggedIn) {
+            Text("وضعیت: دستگاه Bind شده — Peer #$peerId")
+            Text("پروفایل AmneziaWG آماده است و کلید خصوصی فقط روی همین گوشی نگه‌داری می‌شود.")
             Button(onClick = {
                 session.clear()
                 loggedIn = false
+                peerId = -1
                 message = "نشست پاک شد"
             }) {
                 Text("خروج از حساب")
+            }
+        } else if (session.token != null) {
+            TextButton(onClick = {
+                loggedIn = true
+                peerId = session.peerId
+                message = "نشست قبلی بازیابی شد"
+            }) {
+                Text("بازیابی نشست قبلی")
             }
         }
     }
