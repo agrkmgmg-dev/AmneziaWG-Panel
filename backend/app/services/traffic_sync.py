@@ -83,12 +83,20 @@ class TrafficSyncService:
             )
 
 
+            # `awg show ... dump` reports cumulative counters.  Persist the
+            # raw values on the peer and save only their deltas as billable
+            # traffic records.
+            upload_delta = max(0, upload - peer.last_upload_bytes)
+            download_delta = max(0, download - peer.last_download_bytes)
+            peer.last_upload_bytes = upload
+            peer.last_download_bytes = download
+
             traffic = Traffic(
                 peer_id=peer.id,
-                upload_bytes=upload,
-                download_bytes=download,
+                upload_bytes=upload_delta,
+                download_bytes=download_delta,
                 total_bytes=(
-                    upload + download
+                    upload_delta + download_delta
                 ),
             )
 

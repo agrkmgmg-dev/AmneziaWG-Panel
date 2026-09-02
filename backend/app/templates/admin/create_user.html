@@ -49,6 +49,23 @@
             >
         </div>
 
+        <div class="form-group">
+            <label for="expires_at">تاریخ انقضا (اختیاری)</label>
+            <input id="expires_at" type="datetime-local" name="expires_at">
+        </div>
+
+        <div class="form-group">
+            <label for="traffic_limit_gb">سقف حجم (گیگابایت، اختیاری)</label>
+            <input id="traffic_limit_gb" type="number" name="traffic_limit_gb"
+                   min="0" step="0.1" placeholder="مثلاً 50">
+        </div>
+
+        <div class="form-group">
+            <label for="rate_limit_mbps">سقف سرعت (مگابیت)</label>
+            <input id="rate_limit_mbps" type="number" name="rate_limit_mbps"
+                   min="1" max="15" value="15" required>
+        </div>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary">
                 💾 ذخیره کاربر

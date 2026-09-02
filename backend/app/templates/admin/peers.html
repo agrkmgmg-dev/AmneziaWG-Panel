@@ -34,6 +34,7 @@
                     <th>وضعیت</th>
                     <th>انقضا</th>
                     <th>مصرف</th>
+                    <th>سرعت</th>
                     <th>عملیات</th>
                 </tr>
             </thead>
@@ -81,6 +82,10 @@
                         <span class="muted">
                             {{ peer.usage_display or "-" }}
                         </span>
+                    </td>
+
+                    <td>
+                        <span class="muted">{{ peer.rate_limit_mbps }} Mbps</span>
                     </td>
 
                     <td>

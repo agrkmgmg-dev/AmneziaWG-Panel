@@ -151,7 +151,7 @@ class Settings(BaseSettings):
     AWG_PEER_RATE_LIMIT_MBPS: int = Field(
         default=15,
         ge=0,
-        le=10000,
+        le=15,
     )
 
     # -------------------------------------------------

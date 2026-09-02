@@ -312,6 +312,9 @@ async def create_user(
     request: Request,
     username: str = Form(...),
     password: str = Form(...),
+    expires_at: str | None = Form(None),
+    traffic_limit_gb: float | None = Form(None),
+    rate_limit_mbps: int = Form(15),
     service: AdminUserService = Depends(
         get_admin_user_service
     ),
@@ -324,6 +327,23 @@ async def create_user(
         return RedirectResponse(
             url="/admin/login",
             status_code=302,
+        )
+
+    try:
+        expires = datetime.fromisoformat(expires_at) if expires_at else None
+        if rate_limit_mbps < 1 or rate_limit_mbps > 15:
+            raise ValueError("سقف سرعت باید بین 1 تا 15 مگابیت باشد")
+        traffic_limit_bytes = (
+            int(traffic_limit_gb * 1024**3)
+            if traffic_limit_gb is not None and traffic_limit_gb > 0
+            else None
+        )
+    except (TypeError, ValueError) as exc:
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/create_user.html",
+            context={"request": request, "error": str(exc)},
+            status_code=400,
         )
 
     user = await service.create_user(
@@ -345,9 +365,13 @@ async def create_user(
         await peer_service.create_peer(
             user_id=user.id,
             name=username,
+            expires_at=expires,
+            traffic_limit_bytes=traffic_limit_bytes,
+            rate_limit_mbps=rate_limit_mbps,
         )
     except (ValueError, RuntimeError) as exc:
-        # User creation remains successful if a duplicate/legacy peer exists.
+        # Do not leave an account that can never receive a usable VPN profile.
+        await service.delete_user(user.id)
         return templates.TemplateResponse(
             request=request,
             name="admin/create_user.html",
@@ -465,6 +489,8 @@ async def create_peer(
     user_id: int = Form(...),
     name: str = Form(...),
     expires_at: str | None = Form(None),
+    traffic_limit_gb: float | None = Form(None),
+    rate_limit_mbps: int = Form(15),
     service: AdminPeerService = Depends(
         get_admin_peer_service
     ),
@@ -483,10 +509,19 @@ async def create_peer(
         expires_at = None
 
     try:
+        if rate_limit_mbps < 1 or rate_limit_mbps > 15:
+            raise ValueError("سقف سرعت باید بین 1 تا 15 مگابیت باشد")
+        traffic_limit_bytes = (
+            int(traffic_limit_gb * 1024**3)
+            if traffic_limit_gb is not None and traffic_limit_gb > 0
+            else None
+        )
         await service.create_peer(
             user_id=user_id,
             name=name,
             expires_at=expires_at,
+            traffic_limit_bytes=traffic_limit_bytes,
+            rate_limit_mbps=rate_limit_mbps,
         )
     except (ValueError, RuntimeError) as exc:
         return templates.TemplateResponse(

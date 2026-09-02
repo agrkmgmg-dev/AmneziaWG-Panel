@@ -10,6 +10,8 @@ from backend.app.db.database import AsyncSessionLocal
 from backend.app.services.traffic_sync import TrafficSyncService
 from backend.app.services.awg_manager import AWGManagerService
 from backend.app.services.expiration import ExpirationService
+from backend.app.services.usage_limit import UsageLimitService
+from backend.app.repositories.traffic import TrafficRepository
 from backend.app.repositories.peer import PeerRepository
 from backend.app.core.config import settings
 
@@ -48,17 +50,19 @@ class TrafficScheduler:
                     # the dashboard status. Expired peers are removed from
                     # AmneziaWG while their database record is retained.
                     manager = AWGManagerService()
+                    usage = UsageLimitService(TrafficRepository(session))
                     for peer in await PeerRepository(session).get_all():
-                        if peer.is_active and settings.AWG_PEER_RATE_LIMIT_MBPS:
+                        if peer.is_active and peer.rate_limit_mbps:
                             try:
                                 manager.set_rate_limit(
                                     peer.address,
-                                    settings.AWG_PEER_RATE_LIMIT_MBPS,
+                                    peer.rate_limit_mbps,
                                 )
                             except Exception:
                                 pass
-                        if peer.is_active and ExpirationService.is_expired(
-                            peer.expires_at
+                        if peer.is_active and (
+                            ExpirationService.is_expired(peer.expires_at)
+                            or await usage.is_exceeded(peer)
                         ):
                             try:
                                 manager.remove_peer(peer.public_key)

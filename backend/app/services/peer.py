@@ -156,6 +156,7 @@ class PeerService(BaseService):
             private_key=private_key,
             public_key=public_key,
             preshared_key=preshared_key,
+            rate_limit_mbps=settings.AWG_PEER_RATE_LIMIT_MBPS or 15,
         )
 
         peer = await self.repository.create(peer)
@@ -209,6 +210,12 @@ class PeerService(BaseService):
 
         if data.expires_at is not None:
             peer.expires_at = data.expires_at
+
+        if data.traffic_limit_bytes is not None:
+            peer.traffic_limit_bytes = data.traffic_limit_bytes
+
+        if data.rate_limit_mbps is not None:
+            peer.rate_limit_mbps = data.rate_limit_mbps
 
         await self.commit()
         await self.refresh(peer)

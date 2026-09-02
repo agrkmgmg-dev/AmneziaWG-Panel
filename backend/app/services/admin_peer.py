@@ -146,6 +146,7 @@ class AdminPeerService:
         name: str,
         expires_at=None,
         traffic_limit_bytes=None,
+        rate_limit_mbps=None,
     ) -> Peer:
         """
         Create a peer with automatic keys and IP.
@@ -179,6 +180,11 @@ class AdminPeerService:
             address=address,
             expires_at=expires_at,
             traffic_limit_bytes=traffic_limit_bytes,
+            rate_limit_mbps=(
+                rate_limit_mbps
+                if rate_limit_mbps is not None
+                else settings.AWG_PEER_RATE_LIMIT_MBPS or 15
+            ),
             is_active=True,
         )
 
@@ -193,6 +199,11 @@ class AdminPeerService:
                 peer.address,
                 peer.preshared_key,
                 )
+                if peer.rate_limit_mbps:
+                    AWGManagerService().set_rate_limit(
+                        peer.address,
+                        peer.rate_limit_mbps,
+                    )
             except Exception as exc:
                 await self.peer_repository.delete(peer)
                 raise RuntimeError(

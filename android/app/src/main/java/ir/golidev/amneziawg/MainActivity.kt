@@ -48,7 +48,7 @@ private fun LoginScreen() {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("AmneziaWG", style = MaterialTheme.typography.headlineLarge)
+        Text("GoliDev VPN", style = MaterialTheme.typography.headlineLarge)
         Text(message)
         OutlinedTextField(
             value = username,
@@ -81,7 +81,7 @@ private fun LoginScreen() {
                             session.peerId = config.peerId
                             launch(Dispatchers.Main) {
                                 peerId = config.peerId
-                                message = "دستگاه ثبت شد؛ Peer #${config.peerId} آماده‌ی اتصال است"
+                                message = "دستگاه ثبت شد؛ پروفایل اختصاصی آماده است"
                                 loggedIn = true
                             }
                         } catch (error: Exception) {
@@ -96,8 +96,8 @@ private fun LoginScreen() {
             Text("ورود")
         }
         if (loggedIn) {
-            Text("وضعیت: دستگاه Bind شده — Peer #$peerId")
-            Text("پروفایل AmneziaWG آماده است و کلید خصوصی فقط روی همین گوشی نگه‌داری می‌شود.")
+            Text("وضعیت: این گوشی به حساب شما متصل است — شناسه $peerId")
+            Text("کلید خصوصی فقط روی همین گوشی نگه‌داری می‌شود.")
             Button(onClick = {
                 session.clear()
                 loggedIn = false

@@ -119,6 +119,29 @@ class Peer(Base):
         default=None,
     )
 
+    rate_limit_mbps: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=15,
+        server_default="15",
+    )
+
+    # Last raw counters returned by `awg show`.  Traffic rows keep deltas,
+    # while these values make the next delta calculation accurate.
+    last_upload_bytes: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
+    last_download_bytes: Mapped[int] = mapped_column(
+        BigInteger,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
+
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),

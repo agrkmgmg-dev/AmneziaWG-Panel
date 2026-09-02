@@ -24,6 +24,9 @@ class PeerBase(BaseModel):
         description="Peer expiration date",
     )
 
+    traffic_limit_bytes: int | None = Field(default=None, ge=0)
+    rate_limit_mbps: int = Field(default=15, ge=1, le=15)
+
 
 class PeerCreate(PeerBase):
     user_id: int = Field(
@@ -42,6 +45,8 @@ class PeerUpdate(BaseModel):
     is_active: bool | None = None
 
     expires_at: datetime | None = None
+    traffic_limit_bytes: int | None = Field(default=None, ge=0)
+    rate_limit_mbps: int | None = Field(default=None, ge=1, le=15)
 
 
 class PeerResponse(PeerBase):
