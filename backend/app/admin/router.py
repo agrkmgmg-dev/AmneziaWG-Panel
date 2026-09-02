@@ -346,9 +346,14 @@ async def create_user(
             user_id=user.id,
             name=username,
         )
-    except ValueError:
+    except (ValueError, RuntimeError) as exc:
         # User creation remains successful if a duplicate/legacy peer exists.
-        pass
+        return templates.TemplateResponse(
+            request=request,
+            name="admin/create_user.html",
+            context={"request": request, "error": str(exc)},
+            status_code=400,
+        )
 
     return RedirectResponse(
         url="/admin/users",
