@@ -32,6 +32,7 @@
                     <th>ایمیل</th>
                     <th>وضعیت</th>
                     <th>مدیر</th>
+                    <th>VPN</th>
                     <th>تاریخ ایجاد</th>
                     <th>عملیات</th>
                 </tr>
@@ -68,6 +69,17 @@
                             <span class="badge badge-purple">Superuser</span>
                         {% else %}
                             <span class="muted">کاربر</span>
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if user.peers %}
+                            {% set peer = user.peers[0] %}
+                            <a href="/admin/peers/{{ peer.id }}/qr" class="btn btn-sm btn-secondary">📱 QR</a>
+                            <a href="/admin/peers/{{ peer.id }}/config" class="btn btn-sm btn-secondary">Config</a>
+                            <div class="muted">{{ peer.name }}</div>
+                        {% else %}
+                            <span class="muted">بدون Peer</span>
                         {% endif %}
                     </td>
 

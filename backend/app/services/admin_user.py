@@ -2,7 +2,9 @@
 Admin user service.
 """
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.app.models.user import User
 from backend.app.repositories.user import UserRepository
@@ -31,7 +33,10 @@ class AdminUserService:
         Return all users.
         """
 
-        return await self.user_repository.get_all()
+        result = await self.user_repository.session.execute(
+            select(User).options(selectinload(User.peers)).order_by(User.id)
+        )
+        return list(result.scalars().all())
 
 
     async def get_user(
