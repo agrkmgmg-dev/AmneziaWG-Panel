@@ -20,6 +20,7 @@ from backend.app.services.config_import import parse_config
 from backend.app.core.security import hash_password
 from backend.app.repositories.user import UserRepository
 from backend.app.services.awg_manager import AWGManagerService
+from backend.app.core.config import settings
 
 
 class AdminPeerService:
@@ -179,8 +180,19 @@ class AdminPeerService:
 
         peer = await self.peer_repository.create(peer)
 
-        await self.session.commit()
-        await self.session.refresh(peer)
+        # A database record alone is not a usable VPN account. Provision the
+        # peer on the live AmneziaWG interface before reporting success.
+        if settings.AWG_AUTO_SYNC:
+            try:
+                AWGManagerService().add_peer(
+                    peer.public_key,
+                    peer.address,
+                )
+            except Exception as exc:
+                await self.peer_repository.delete(peer)
+                raise RuntimeError(
+                    "VPN peer provisioning failed; no configuration was created"
+                ) from exc
 
         return peer
 
@@ -198,6 +210,14 @@ class AdminPeerService:
 
         if peer is None:
             return False
+
+        if settings.AWG_AUTO_SYNC:
+            try:
+                AWGManagerService().remove_peer(peer.public_key)
+            except Exception:
+                # Continue deletion when the peer was already absent from the
+                # live interface; the database must not retain a dead account.
+                pass
 
         await self.peer_repository.delete(peer)
 

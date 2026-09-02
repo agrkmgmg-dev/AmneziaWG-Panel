@@ -17,6 +17,8 @@ from backend.app.schemas.peer import (
 from backend.app.services.base import BaseService
 from backend.app.services.ip_manager import IPManagerService
 from backend.app.services.key_generator import KeyGeneratorService
+from backend.app.services.awg_manager import AWGManagerService
+from backend.app.core.config import settings
 
 
 class PeerService(BaseService):
@@ -156,8 +158,17 @@ class PeerService(BaseService):
 
         peer = await self.repository.create(peer)
 
-        await self.commit()
-        await self.refresh(peer)
+        if settings.AWG_AUTO_SYNC:
+            try:
+                AWGManagerService().add_peer(
+                    peer.public_key,
+                    peer.address,
+                )
+            except Exception as exc:
+                await self.repository.delete(peer)
+                raise RuntimeError(
+                    "VPN peer provisioning failed; no configuration was created"
+                ) from exc
 
         return PeerResponse.model_validate(peer)
 
@@ -257,6 +268,12 @@ class PeerService(BaseService):
 
         if peer is None:
             return False
+
+        if settings.AWG_AUTO_SYNC:
+            try:
+                AWGManagerService().remove_peer(peer.public_key)
+            except Exception:
+                pass
 
         await self.repository.delete(peer)
 

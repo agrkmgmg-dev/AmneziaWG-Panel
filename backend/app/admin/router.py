@@ -483,7 +483,7 @@ async def create_peer(
             name=name,
             expires_at=expires_at,
         )
-    except ValueError as exc:
+    except (ValueError, RuntimeError) as exc:
         return templates.TemplateResponse(
             request=request,
             name="admin/create_peer.html",
