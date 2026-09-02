@@ -88,6 +88,11 @@ class Peer(Base):
         nullable=True,
     )
 
+    amnezia_i1: Mapped[str | None] = mapped_column(
+        String(512),
+        nullable=True,
+    )
+
 
     address: Mapped[str] = mapped_column(
         String(50),

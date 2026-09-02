@@ -72,6 +72,7 @@ class AdminPeerService:
             public_key=public_key,
             private_key=parsed.private_key,
             preshared_key=parsed.preshared_key,
+            amnezia_i1=parsed.amnezia_i1,
             address=parsed.address,
             expires_at=expires_at,
             is_active=True,

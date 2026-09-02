@@ -10,6 +10,7 @@ class ImportedConfig:
     server_public_key: str
     endpoint: str | None
     preshared_key: str | None
+    amnezia_i1: str | None
 
 
 def parse_config(text: str) -> ImportedConfig:
@@ -32,6 +33,9 @@ def parse_config(text: str) -> ImportedConfig:
     server_key = values.get("peer.publickey")
     endpoint = values.get("peer.endpoint")
     preshared_key = values.get("peer.presharedkey")
+    amnezia_i1 = values.get("interface.i1")
     if not private_key or not address or not server_key:
         raise ValueError("کانفیگ باید PrivateKey، Address و PublicKey داشته باشد")
-    return ImportedConfig(private_key, address, server_key, endpoint, preshared_key)
+    return ImportedConfig(
+        private_key, address, server_key, endpoint, preshared_key, amnezia_i1
+    )

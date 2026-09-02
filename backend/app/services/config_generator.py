@@ -45,6 +45,7 @@ class ConfigGeneratorService:
         config = f"""[Interface]
 PrivateKey = {peer.private_key}
 Address = {peer.address}
+DNS = 172.29.172.254, 1.0.0.1
 Jc = {settings.AWG_JC}
 Jmin = {settings.AWG_JMIN}
 Jmax = {settings.AWG_JMAX}
@@ -56,6 +57,7 @@ H1 = {settings.AWG_H1}
 H2 = {settings.AWG_H2}
 H3 = {settings.AWG_H3}
 H4 = {settings.AWG_H4}
+{f"I1 = {peer.amnezia_i1}" if peer.amnezia_i1 else ""}
 
 [Peer]
 PublicKey = {self.server_public_key}
