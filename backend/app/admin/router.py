@@ -516,7 +516,7 @@ async def create_peer(
             if traffic_limit_gb is not None and traffic_limit_gb > 0
             else None
         )
-        await service.create_peer(
+        peer = await service.create_peer(
             user_id=user_id,
             name=name,
             expires_at=expires_at,
@@ -553,9 +553,14 @@ async def delete_peer(
 
     await service.delete_peer(peer_id)
 
-    return RedirectResponse(
-        url="/admin/peers",
-        status_code=302,
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/peer_created.html",
+        context={
+            "request": request,
+            "peer": peer,
+            "traffic_limit_gb": traffic_limit_gb,
+        },
     )
 
 

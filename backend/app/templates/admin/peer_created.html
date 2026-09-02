@@ -1,0 +1,29 @@
+{% extends "admin/base.html" %}
+
+{% block title %}کلاینت آماده است - AmneziaWG Panel{% endblock %}
+{% block nav_peers %}active{% endblock %}
+{% block page_title %}کلاینت آماده است{% endblock %}
+{% block page_subtitle %}کانفیگ را همین حالا برای کاربر ارسال کنید{% endblock %}
+
+{% block content %}
+<section class="form-card">
+    <div class="form-header">
+        <div class="form-icon purple-bg">✅</div>
+        <div>
+            <h2>{{ peer.name }}</h2>
+            <p>IP: {{ peer.address }} — سرعت: {{ peer.rate_limit_mbps }} Mbps</p>
+        </div>
+    </div>
+
+    <div class="info-box">
+        {% if peer.expires_at %}انقضا: {{ peer.expires_at }}<br>{% endif %}
+        {% if traffic_limit_gb %}سقف حجم: {{ traffic_limit_gb }} گیگابایت{% else %}سقف حجم: بدون محدودیت{% endif %}
+    </div>
+
+    <div class="form-actions">
+        <a href="/admin/peers/{{ peer.id }}/config" class="btn btn-primary">⬇️ دانلود Config</a>
+        <a href="/admin/peers/{{ peer.id }}/qr" class="btn btn-secondary">📱 دریافت QR Code</a>
+        <a href="/admin/peers" class="btn btn-secondary">← لیست کلاینت‌ها</a>
+    </div>
+</section>
+{% endblock %}
