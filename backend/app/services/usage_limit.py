@@ -29,7 +29,7 @@ class UsageLimitService:
         Return used bytes.
         """
 
-        return await self.traffic_repository.get_total_traffic(
+        return await self.traffic_repository.get_total_by_peer(
             peer.id
         )
 
