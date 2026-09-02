@@ -38,11 +38,29 @@ jobs:
           gradle-version: "8.7"
 
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon
+        id: build
+        continue-on-error: true
+        run: gradle assembleDebug --stacktrace --no-daemon > build.log 2>&1
 
       - name: Upload APK
+        if: steps.build.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: golidev-vpn-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           retention-days: 14
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golidev-vpn-build-log
+          path: android/build.log
+          retention-days: 14
+
+      - name: Fail with build detail
+        if: steps.build.outcome == 'failure'
+        run: |
+          tail -n 30 build.log
+          echo "::error::$(tail -n 1 build.log)"
+          exit 1
