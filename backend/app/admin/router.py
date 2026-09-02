@@ -362,7 +362,7 @@ async def create_user(
         )
 
     try:
-        await peer_service.create_peer(
+        peer = await peer_service.create_peer(
             user_id=user.id,
             name=username,
             expires_at=expires,
@@ -379,9 +379,14 @@ async def create_user(
             status_code=400,
         )
 
-    return RedirectResponse(
-        url="/admin/users",
-        status_code=302,
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/peer_created.html",
+        context={
+            "request": request,
+            "peer": peer,
+            "traffic_limit_gb": traffic_limit_gb,
+        },
     )
 
 
