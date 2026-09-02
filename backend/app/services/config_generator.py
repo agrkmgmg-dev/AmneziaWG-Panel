@@ -57,7 +57,7 @@ H1 = {settings.AWG_H1}
 H2 = {settings.AWG_H2}
 H3 = {settings.AWG_H3}
 H4 = {settings.AWG_H4}
-{f"I1 = {peer.amnezia_i1}" if peer.amnezia_i1 else ""}
+{f"I1 = {peer.amnezia_i1 or settings.AWG_I1}" if (peer.amnezia_i1 or settings.AWG_I1) else ""}
 
 [Peer]
 PublicKey = {self.server_public_key}

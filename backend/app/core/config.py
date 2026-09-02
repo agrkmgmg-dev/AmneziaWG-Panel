@@ -138,6 +138,10 @@ class Settings(BaseSettings):
     AWG_H3: str = "2117691830-2138717323"
     AWG_H4: str = "2142969761-2146862938"
 
+    # Optional AmneziaWG init packet value.  It must exactly match the
+    # server configuration when the server uses I1 obfuscation.
+    AWG_I1: str | None = Field(default=None)
+
     AWG_CONFIG_PATH: str = Field(
         default="/etc/amnezia/amneziawg/awg0.conf"
     )

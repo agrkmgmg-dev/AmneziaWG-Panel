@@ -63,6 +63,7 @@ async def bind_device(
             "H2": settings.AWG_H2,
             "H3": settings.AWG_H3,
             "H4": settings.AWG_H4,
+            **({"I1": settings.AWG_I1} if settings.AWG_I1 else {}),
         },
         bound_at=peer.device_bound_at or now,
     )

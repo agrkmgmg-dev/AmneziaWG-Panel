@@ -176,6 +176,7 @@ class AdminPeerService:
             name=name,
             public_key=public_key,
             preshared_key=preshared_key,
+            amnezia_i1=settings.AWG_I1,
             private_key=private_key,
             address=address,
             expires_at=expires_at,

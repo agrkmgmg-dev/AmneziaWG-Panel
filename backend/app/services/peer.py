@@ -156,6 +156,7 @@ class PeerService(BaseService):
             private_key=private_key,
             public_key=public_key,
             preshared_key=preshared_key,
+            amnezia_i1=settings.AWG_I1,
             rate_limit_mbps=settings.AWG_PEER_RATE_LIMIT_MBPS or 15,
         )
 
