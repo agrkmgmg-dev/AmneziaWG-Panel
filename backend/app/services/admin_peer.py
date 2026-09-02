@@ -71,6 +71,7 @@ class AdminPeerService:
             name=name,
             public_key=public_key,
             private_key=parsed.private_key,
+            preshared_key=parsed.preshared_key,
             address=parsed.address,
             expires_at=expires_at,
             is_active=True,
@@ -78,7 +79,7 @@ class AdminPeerService:
         await self.peer_repository.create(peer)
         await self.session.refresh(peer)
         try:
-            AWGManagerService().add_peer(peer.public_key, peer.address)
+            AWGManagerService().add_peer(peer.public_key, peer.address, peer.preshared_key)
         except Exception:
             # Keep the database record; reconciliation can retry when the
             # host helper is temporarily unavailable.
@@ -164,6 +165,7 @@ class AdminPeerService:
         private_key, public_key = (
             key_service.generate_keypair()
         )
+        preshared_key = key_service.generate_preshared_key()
 
         address = await ip_service.get_next_ip()
 
@@ -171,6 +173,7 @@ class AdminPeerService:
             user_id=user_id,
             name=name,
             public_key=public_key,
+            preshared_key=preshared_key,
             private_key=private_key,
             address=address,
             expires_at=expires_at,
@@ -185,8 +188,9 @@ class AdminPeerService:
         if settings.AWG_AUTO_SYNC:
             try:
                 AWGManagerService().add_peer(
-                    peer.public_key,
-                    peer.address,
+                peer.public_key,
+                peer.address,
+                peer.preshared_key,
                 )
             except Exception as exc:
                 await self.peer_repository.delete(peer)

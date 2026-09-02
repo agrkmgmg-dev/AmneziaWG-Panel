@@ -20,8 +20,11 @@ class AWGManagerService:
         if response.startswith("ERROR"):
             raise RuntimeError(response)
 
-    def add_peer(self, public_key: str, allowed_ips: str) -> None:
-        response = self._request(f"add {public_key} {allowed_ips}")
+    def add_peer(self, public_key: str, allowed_ips: str, preshared_key: str | None = None) -> None:
+        request = f"add {public_key} {allowed_ips}"
+        if preshared_key:
+            request += f" {preshared_key}"
+        response = self._request(request)
         if response.startswith("ERROR"):
             raise RuntimeError(response)
 

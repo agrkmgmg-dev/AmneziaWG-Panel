@@ -71,6 +71,11 @@ class Peer(Base):
         nullable=True,
     )
 
+    preshared_key: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     device_public_key: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,

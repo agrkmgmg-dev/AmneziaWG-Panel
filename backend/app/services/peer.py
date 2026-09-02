@@ -141,6 +141,7 @@ class PeerService(BaseService):
         private_key, public_key = (
             self.key_generator.generate_keypair()
         )
+        preshared_key = self.key_generator.generate_preshared_key()
 
         address = data.address
 
@@ -154,6 +155,7 @@ class PeerService(BaseService):
             expires_at=data.expires_at,
             private_key=private_key,
             public_key=public_key,
+            preshared_key=preshared_key,
         )
 
         peer = await self.repository.create(peer)
@@ -163,6 +165,7 @@ class PeerService(BaseService):
                 AWGManagerService().add_peer(
                     peer.public_key,
                     peer.address,
+                    peer.preshared_key,
                 )
             except Exception as exc:
                 await self.repository.delete(peer)

@@ -59,6 +59,7 @@ H4 = {settings.AWG_H4}
 
 [Peer]
 PublicKey = {self.server_public_key}
+{f"PresharedKey = {peer.preshared_key}" if peer.preshared_key else ""}
 Endpoint = {self.endpoint}
 AllowedIPs = 0.0.0.0/0, ::/0
 PersistentKeepalive = 25

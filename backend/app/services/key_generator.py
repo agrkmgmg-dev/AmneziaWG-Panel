@@ -63,3 +63,13 @@ class KeyGeneratorService:
         public_key = self.generate_public_key(private_key)
 
         return private_key, public_key
+
+    @staticmethod
+    def generate_preshared_key() -> str:
+        result = subprocess.run(
+            ["wg", "genpsk"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
