@@ -7,6 +7,7 @@ Supports real AWG mode and development mock mode.
 import subprocess
 import socket
 from shutil import which
+from pathlib import Path
 
 
 class AWGCollector:
@@ -21,7 +22,13 @@ class AWGCollector:
 
         self.interface = interface
         self.socket_path = "/run/amneziawg-panel/awg.sock"
-        self.mock_mode = which("awg") is None
+        # The panel container normally talks to the host through this socket
+        # and does not need the `awg` binary itself.  Treat it as mock mode
+        # only when neither control mechanism is available.
+        self.mock_mode = (
+            which("awg") is None
+            and not Path(self.socket_path).exists()
+        )
 
 
     def get_dump(self) -> str:
