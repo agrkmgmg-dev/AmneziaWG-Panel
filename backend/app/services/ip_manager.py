@@ -4,6 +4,7 @@ IP Manager Service.
 
 from backend.app.services.ip_pool import IPPoolService
 from backend.app.collectors.awg import AWGCollector
+from pathlib import Path
 
 
 class IPManagerService:
@@ -55,7 +56,9 @@ class IPManagerService:
             # Existing Amnezia installations use 10.8.1.0/24. Keep the
             # legacy 10.0.0.0/24 default for isolated tests/dev instances,
             # but allocate from the live network in production.
-            if any(ip.startswith("10.8.1.") for ip in live_ips):
+            if any(ip.startswith("10.8.1.") for ip in live_ips) or Path(
+                "/run/amneziawg-panel/awg.sock"
+            ).exists():
                 self.pool = IPPoolService(
                     subnet="10.8.1.0/24",
                     server_ip="10.8.1.1",
