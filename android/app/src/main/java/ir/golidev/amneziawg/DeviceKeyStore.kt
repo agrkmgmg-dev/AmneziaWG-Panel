@@ -25,7 +25,7 @@ class DeviceKeyStore(context: Context) {
         }
         val privateBytes = ByteArray(32).also { java.security.SecureRandom().nextBytes(it) }
         val privateParams = X25519PrivateKeyParameters(privateBytes, 0)
-        val publicBytes = privateParams.generatePublic().encoded
+        val publicBytes = privateParams.generatePublicKey().encoded
         val keys = DeviceKeys(
             Base64.encodeToString(privateBytes, Base64.NO_WRAP),
             Base64.encodeToString(publicBytes, Base64.NO_WRAP),
