@@ -3,6 +3,7 @@ Admin dashboard and authentication router.
 """
 
 from datetime import datetime
+from urllib.parse import quote
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile
 from fastapi.responses import (
@@ -38,6 +39,16 @@ router = APIRouter(
 templates = Jinja2Templates(
     directory="backend/app/templates",
 )
+
+
+def _parse_optional_gb(value: str | None) -> float | None:
+    """Treat an empty HTML number field as an unlimited traffic quota."""
+    if value is None or not value.strip():
+        return None
+    amount = float(value)
+    if amount < 0:
+        raise ValueError("سقف حجم نمی‌تواند منفی باشد")
+    return amount
 
 
 # =====================================================
@@ -313,8 +324,9 @@ async def create_user(
     username: str = Form(...),
     password: str = Form(...),
     expires_at: str | None = Form(None),
-    traffic_limit_gb: float | None = Form(None),
+    traffic_limit_gb: str | None = Form(None),
     rate_limit_mbps: int = Form(15),
+    protocol: str = Form("amneziawg"),
     service: AdminUserService = Depends(
         get_admin_user_service
     ),
@@ -333,6 +345,7 @@ async def create_user(
         expires = datetime.fromisoformat(expires_at) if expires_at else None
         if rate_limit_mbps < 1 or rate_limit_mbps > 15:
             raise ValueError("سقف سرعت باید بین 1 تا 15 مگابیت باشد")
+        traffic_limit_gb = _parse_optional_gb(traffic_limit_gb)
         traffic_limit_bytes = (
             int(traffic_limit_gb * 1024**3)
             if traffic_limit_gb is not None and traffic_limit_gb > 0
@@ -368,6 +381,7 @@ async def create_user(
             expires_at=expires,
             traffic_limit_bytes=traffic_limit_bytes,
             rate_limit_mbps=rate_limit_mbps,
+            protocol=protocol,
         )
     except (ValueError, RuntimeError) as exc:
         # Do not leave an account that can never receive a usable VPN profile.
@@ -494,8 +508,9 @@ async def create_peer(
     user_id: int = Form(...),
     name: str = Form(...),
     expires_at: str | None = Form(None),
-    traffic_limit_gb: float | None = Form(None),
+    traffic_limit_gb: str | None = Form(None),
     rate_limit_mbps: int = Form(15),
+    protocol: str = Form("amneziawg"),
     service: AdminPeerService = Depends(
         get_admin_peer_service
     ),
@@ -514,6 +529,7 @@ async def create_peer(
         expires_at = None
 
     try:
+        traffic_limit_gb = _parse_optional_gb(traffic_limit_gb)
         if rate_limit_mbps < 1 or rate_limit_mbps > 15:
             raise ValueError("سقف سرعت باید بین 1 تا 15 مگابیت باشد")
         traffic_limit_bytes = (
@@ -527,6 +543,7 @@ async def create_peer(
             expires_at=expires_at,
             traffic_limit_bytes=traffic_limit_bytes,
             rate_limit_mbps=rate_limit_mbps,
+            protocol=protocol,
         )
     except (ValueError, RuntimeError) as exc:
         return templates.TemplateResponse(
@@ -536,9 +553,14 @@ async def create_peer(
             status_code=400,
         )
 
-    return RedirectResponse(
-        url="/admin/peers",
-        status_code=302,
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/peer_created.html",
+        context={
+            "request": request,
+            "peer": peer,
+            "traffic_limit_gb": traffic_limit_gb,
+        },
     )
 
 @router.get("/peers/{peer_id}/delete")
@@ -556,30 +578,54 @@ async def delete_peer(
             status_code=302,
         )
 
-    await service.delete_peer(peer_id)
+    try:
+        await service.delete_peer(peer_id)
+    except Exception as exc:
+        # Never render a blank 500 page for an admin action. The operation is
+        # rolled back by the service and the error is shown on the list page.
+        return RedirectResponse(
+            url=f"/admin/peers?error={quote(str(exc))}",
+            status_code=303,
+        )
+    return RedirectResponse(url="/admin/peers", status_code=303)
 
-    return templates.TemplateResponse(
-        request=request,
-        name="admin/peer_created.html",
-        context={
-            "request": request,
-            "peer": peer,
-            "traffic_limit_gb": traffic_limit_gb,
-        },
-    )
+
+@router.post("/peers/{peer_id}/renew")
+async def renew_peer(
+    peer_id: int,
+    request: Request,
+    days: int = Form(30),
+    traffic_limit_gb: str | None = Form(None),
+    service: AdminPeerService = Depends(get_admin_peer_service),
+):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    try:
+        traffic_limit_gb = _parse_optional_gb(traffic_limit_gb)
+        await service.extend_peer(peer_id, days, traffic_limit_gb)
+    except (ValueError, RuntimeError) as exc:
+        return RedirectResponse(url=f"/admin/peers?error={exc}", status_code=303)
+    return RedirectResponse(url="/admin/peers", status_code=302)
 
 
 @router.get("/peers/{peer_id}/extend/{days}")
-async def extend_peer(
+async def extend_peer_legacy(
     peer_id: int,
     days: int,
     request: Request,
     service: AdminPeerService = Depends(get_admin_peer_service),
 ):
+    """Compatibility route for the existing +30-day links in the panel."""
     if not is_admin_authenticated(request):
         return RedirectResponse(url="/admin/login", status_code=302)
-    await service.extend_peer(peer_id, days)
-    return RedirectResponse(url="/admin/peers", status_code=302)
+    try:
+        await service.extend_peer(peer_id, days)
+    except (ValueError, RuntimeError) as exc:
+        return RedirectResponse(
+            url=f"/admin/peers?error={quote(str(exc))}",
+            status_code=303,
+        )
+    return RedirectResponse(url="/admin/peers", status_code=303)
 
 # =====================================================
 # Logout

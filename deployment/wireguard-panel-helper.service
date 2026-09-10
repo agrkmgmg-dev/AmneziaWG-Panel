@@ -1,0 +1,18 @@
+[Unit]
+Description=WireGuard Panel Control Socket
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+Environment=PANEL_SOCKET_PATH=/run/amneziawg-panel/wg.sock
+Environment=PANEL_CONTAINER=amnezia-wireguard
+Environment=PANEL_INTERFACE=wg0
+Environment=PANEL_VPN_NETWORK=10.8.2.0/24
+Environment=PANEL_VPN_COMMAND=wg
+ExecStart=/usr/local/sbin/wireguard-panel-helper.py
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

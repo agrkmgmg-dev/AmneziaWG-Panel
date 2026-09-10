@@ -24,6 +24,8 @@ class PeerBase(BaseModel):
         description="Peer expiration date",
     )
 
+    protocol: str = Field(default="amneziawg", pattern="^(amneziawg|wireguard)$")
+
     traffic_limit_bytes: int | None = Field(default=None, ge=0)
     rate_limit_mbps: int = Field(default=15, ge=1, le=15)
 

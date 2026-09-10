@@ -4,6 +4,7 @@ IP Manager Service.
 
 from backend.app.services.ip_pool import IPPoolService
 from backend.app.collectors.awg import AWGCollector
+from backend.app.collectors.wg import WGCollector
 from pathlib import Path
 
 
@@ -15,13 +16,15 @@ class IPManagerService:
     def __init__(
         self,
         peer_repository,
+        protocol: str = "amneziawg",
     ) -> None:
 
         self.peer_repository = peer_repository
+        self.protocol = protocol
 
         self.pool = IPPoolService(
-            subnet="10.0.0.0/24",
-            server_ip="10.0.0.1",
+            subnet=("10.8.2.0/24" if protocol == "wireguard" else "10.0.0.0/24"),
+            server_ip=("10.8.2.1" if protocol == "wireguard" else "10.0.0.1"),
         )
 
 
@@ -35,14 +38,14 @@ class IPManagerService:
         used_ips = {
             peer.address
             for peer in peers
-            if peer.address
+            if peer.address and getattr(peer, "protocol", "amneziawg") == self.protocol
         }
 
         # The database may not contain peers created by the original
         # Amnezia installation. Reserve addresses reported by live AWG too,
         # otherwise a newly generated config can collide with an old peer.
         try:
-            collector = AWGCollector()
+            collector = WGCollector() if self.protocol == "wireguard" else AWGCollector()
             live_ips = (
                 {
                     item["address"]
@@ -56,7 +59,12 @@ class IPManagerService:
             # Existing Amnezia installations use 10.8.1.0/24. Keep the
             # legacy 10.0.0.0/24 default for isolated tests/dev instances,
             # but allocate from the live network in production.
-            if any(ip.startswith("10.8.1.") for ip in live_ips) or Path(
+            if self.protocol == "wireguard":
+                self.pool = IPPoolService(
+                    subnet="10.8.2.0/24",
+                    server_ip="10.8.2.1",
+                )
+            elif any(ip.startswith("10.8.1.") for ip in live_ips) or Path(
                 "/run/amneziawg-panel/awg.sock"
             ).exists():
                 self.pool = IPPoolService(

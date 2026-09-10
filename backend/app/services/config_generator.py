@@ -1,6 +1,4 @@
-"""
-AmneziaWG Config Generator Service.
-"""
+"""Generate client configuration files for AmneziaWG and WireGuard."""
 
 from pathlib import Path
 
@@ -11,7 +9,7 @@ from backend.app.utils.qr import generate_qr
 
 class ConfigGeneratorService:
     """
-    Generate AmneziaWG client configuration and QR code.
+    Generate VPN client configuration and QR code.
     """
 
     def __init__(
@@ -39,8 +37,32 @@ class ConfigGeneratorService:
         peer: Peer,
     ) -> str:
         """
-        Generate AmneziaWG client config.
+        Generate a config matching the peer's selected protocol.
         """
+
+        if peer.protocol == "wireguard":
+            return self._generate_wireguard(peer)
+
+        return self._generate_amneziawg(peer)
+
+    def _generate_wireguard(self, peer: Peer) -> str:
+        """Generate a standard, interoperable WireGuard configuration."""
+        config = f"""[Interface]
+PrivateKey = {peer.private_key}
+Address = {peer.address}
+DNS = 1.1.1.1, 1.0.0.1
+
+[Peer]
+PublicKey = {settings.WG_SERVER_PUBLIC_KEY}
+{f"PresharedKey = {peer.preshared_key}" if peer.preshared_key else ""}
+Endpoint = {settings.WG_ENDPOINT}
+AllowedIPs = 0.0.0.0/0, ::/0
+PersistentKeepalive = 25
+"""
+        return config.strip()
+
+    def _generate_amneziawg(self, peer: Peer) -> str:
+        """Generate an AmneziaWG client configuration."""
 
         config = f"""[Interface]
 PrivateKey = {peer.private_key}

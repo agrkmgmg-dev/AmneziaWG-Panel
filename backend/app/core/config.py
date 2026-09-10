@@ -175,6 +175,26 @@ class Settings(BaseSettings):
     )
 
     # -------------------------------------------------
+    # Standard WireGuard (kept separate from AmneziaWG)
+    # -------------------------------------------------
+
+    WG_INTERFACE: str = Field(default="wg0")
+
+    WG_ENDPOINT: str = Field(
+        default="YOUR_SERVER_IP:51820"
+    )
+
+    WG_SERVER_PUBLIC_KEY: str = Field(
+        default="YOUR_WIREGUARD_SERVER_PUBLIC_KEY"
+    )
+
+    WG_CONTAINER_NAME: str = Field(
+        default="amnezia-wireguard"
+    )
+
+    WG_AUTO_SYNC: bool = Field(default=False)
+
+    # -------------------------------------------------
     # Traffic
     # -------------------------------------------------
 

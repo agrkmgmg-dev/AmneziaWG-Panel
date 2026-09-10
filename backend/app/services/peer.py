@@ -18,6 +18,7 @@ from backend.app.services.base import BaseService
 from backend.app.services.ip_manager import IPManagerService
 from backend.app.services.key_generator import KeyGeneratorService
 from backend.app.services.awg_manager import AWGManagerService
+from backend.app.services.wg_manager import WGManagerService
 from backend.app.core.config import settings
 
 
@@ -143,10 +144,20 @@ class PeerService(BaseService):
         )
         preshared_key = self.key_generator.generate_preshared_key()
 
+        protocol = data.protocol
+        ip_manager = (
+            self.ip_manager
+            if protocol == "amneziawg"
+            else IPManagerService(
+                peer_repository=self.repository,
+                protocol="wireguard",
+            )
+        )
+
         address = data.address
 
         if not address:
-            address = await self.ip_manager.get_next_ip()
+            address = await ip_manager.get_next_ip()
 
         peer = Peer(
             user_id=data.user_id,
@@ -155,16 +166,20 @@ class PeerService(BaseService):
             expires_at=data.expires_at,
             private_key=private_key,
             public_key=public_key,
+            protocol=protocol,
             preshared_key=preshared_key,
-            amnezia_i1=settings.AWG_I1,
+            amnezia_i1=settings.AWG_I1 if protocol == "amneziawg" else None,
             rate_limit_mbps=settings.AWG_PEER_RATE_LIMIT_MBPS or 15,
         )
 
         peer = await self.repository.create(peer)
 
-        if settings.AWG_AUTO_SYNC:
+        auto_sync = settings.WG_AUTO_SYNC if protocol == "wireguard" else settings.AWG_AUTO_SYNC
+
+        if auto_sync:
             try:
-                AWGManagerService().add_peer(
+                manager = WGManagerService() if protocol == "wireguard" else AWGManagerService()
+                manager.add_peer(
                     peer.public_key,
                     peer.address,
                     peer.preshared_key,
@@ -280,9 +295,12 @@ class PeerService(BaseService):
         if peer is None:
             return False
 
-        if settings.AWG_AUTO_SYNC:
+        auto_sync = settings.WG_AUTO_SYNC if peer.protocol == "wireguard" else settings.AWG_AUTO_SYNC
+
+        if auto_sync:
             try:
-                AWGManagerService().remove_peer(peer.public_key)
+                manager = WGManagerService() if peer.protocol == "wireguard" else AWGManagerService()
+                manager.remove_peer(peer.public_key)
             except Exception:
                 pass
 

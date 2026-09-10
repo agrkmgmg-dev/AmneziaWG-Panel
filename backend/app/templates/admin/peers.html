@@ -24,12 +24,13 @@
 
     {% if peers %}
 
-    <div class="table-wrap">
+    <div class="table-wrap peer-table-wrap">
         <table class="data-table">
             <thead>
                 <tr>
                     <th>ID</th>
                     <th>کلاینت</th>
+                    <th>نوع</th>
                     <th>IP</th>
                     <th>وضعیت</th>
                     <th>انقضا</th>
@@ -52,6 +53,14 @@
                             <div class="peer-icon">🔑</div>
                             <strong>{{ peer.name }}</strong>
                         </div>
+                    </td>
+
+                    <td>
+                        {% if peer.protocol == "wireguard" %}
+                            <span class="badge badge-neutral">WireGuard</span>
+                        {% else %}
+                            <span class="badge badge-success">AmneziaWG</span>
+                        {% endif %}
                     </td>
 
                     <td>
@@ -104,6 +113,11 @@
                                 📱 QR
                             </a>
                             <a href="/admin/peers/{{ peer.id }}/extend/30" class="btn btn-sm btn-secondary">+۳۰ روز</a>
+                            <form method="post" action="/admin/peers/{{ peer.id }}/renew" class="renew-form">
+                                <input type="hidden" name="days" value="30">
+                                <input type="number" name="traffic_limit_gb" min="0.01" step="0.01" value="1" title="حجم اضافه‌شده (GB)">
+                                <button type="submit" class="btn btn-sm btn-secondary">تمدید حجم</button>
+                            </form>
 
                             <a
                                 href="/admin/peers/{{ peer.id }}/delete"
@@ -119,6 +133,38 @@
             {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <div class="mobile-peer-list">
+        {% for peer in peers %}
+        <article class="mobile-peer-card">
+            <div class="mobile-peer-heading">
+                <div>
+                    <strong>🔑 {{ peer.name }}</strong>
+                    <code class="ip-code">{{ peer.address }}</code>
+                </div>
+                {% if peer.protocol == "wireguard" %}
+                    <span class="badge badge-neutral">WireGuard</span>
+                {% else %}
+                    <span class="badge badge-success">AmneziaWG</span>
+                {% endif %}
+            </div>
+            <div class="mobile-peer-meta">
+                <span>سرعت: {{ peer.rate_limit_mbps }} Mbps</span>
+                <span>مصرف: {{ peer.usage_display or "-" }}</span>
+                <span>انقضا: {{ peer.expires_at or "بدون تاریخ" }}</span>
+            </div>
+            <div class="mobile-peer-actions">
+                <a href="/admin/peers/{{ peer.id }}/config" class="btn btn-primary">⬇️ فایل کانفیگ</a>
+                <a href="/admin/peers/{{ peer.id }}/qr" class="btn btn-secondary">📱 QR</a>
+                <form method="post" action="/admin/peers/{{ peer.id }}/renew" class="mobile-renew-form">
+                    <input type="hidden" name="days" value="30">
+                    <input type="hidden" name="traffic_limit_gb" value="">
+                    <button type="submit" class="btn btn-secondary">+۳۰ روز</button>
+                </form>
+            </div>
+        </article>
+        {% endfor %}
     </div>
 
     {% else %}

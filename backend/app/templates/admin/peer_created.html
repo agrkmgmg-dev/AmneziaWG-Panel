@@ -11,7 +11,7 @@
         <div class="form-icon purple-bg">✅</div>
         <div>
             <h2>{{ peer.name }}</h2>
-            <p>IP: {{ peer.address }} — سرعت: {{ peer.rate_limit_mbps }} Mbps</p>
+            <p>{{ "WireGuard" if peer.protocol == "wireguard" else "AmneziaWG" }} — IP: {{ peer.address }} — سرعت: {{ peer.rate_limit_mbps }} Mbps</p>
         </div>
     </div>
 
@@ -21,8 +21,8 @@
     </div>
 
     <div class="form-actions">
-        <a href="/admin/peers/{{ peer.id }}/config" class="btn btn-primary">⬇️ دانلود Config</a>
-        <a href="/admin/peers/{{ peer.id }}/qr" class="btn btn-secondary">📱 دریافت QR Code</a>
+        <a href="/admin/peers/{{ peer.id }}/config" class="btn btn-primary">⬇️ دانلود فایل کانفیگ</a>
+        <a href="/admin/peers/{{ peer.id }}/qr" target="_blank" class="btn btn-secondary">📱 نمایش QR Code</a>
         <a href="/admin/peers" class="btn btn-secondary">← لیست کلاینت‌ها</a>
     </div>
 </section>

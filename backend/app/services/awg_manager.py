@@ -32,7 +32,9 @@ class AWGManagerService:
         from backend.app.services.rate_limit import peer_rate_request
 
         request = peer_rate_request(address, mbps)
-        self._request(request)
+        response = self._request(request)
+        if response.startswith("ERROR"):
+            raise RuntimeError(response)
 
     def _request(self, request: str) -> str:
         sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)

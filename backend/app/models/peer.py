@@ -71,6 +71,16 @@ class Peer(Base):
         nullable=True,
     )
 
+    # "amneziawg" keeps the original obfuscated protocol; "wireguard" is
+    # a standard WireGuard profile served from its own interface/subnet.
+    protocol: Mapped[str] = mapped_column(
+        String(20),
+        nullable=False,
+        default="amneziawg",
+        server_default="amneziawg",
+        index=True,
+    )
+
     preshared_key: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,

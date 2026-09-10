@@ -9,6 +9,7 @@ import asyncio
 from backend.app.db.database import AsyncSessionLocal
 from backend.app.services.traffic_sync import TrafficSyncService
 from backend.app.services.awg_manager import AWGManagerService
+from backend.app.services.wg_manager import WGManagerService
 from backend.app.services.expiration import ExpirationService
 from backend.app.services.usage_limit import UsageLimitService
 from backend.app.repositories.traffic import TrafficRepository
@@ -49,9 +50,13 @@ class TrafficScheduler:
                     # Enforce time limits on the live interface, not only in
                     # the dashboard status. Expired peers are removed from
                     # AmneziaWG while their database record is retained.
-                    manager = AWGManagerService()
                     usage = UsageLimitService(TrafficRepository(session))
                     for peer in await PeerRepository(session).get_all():
+                        manager = (
+                            WGManagerService()
+                            if getattr(peer, "protocol", "amneziawg") == "wireguard"
+                            else AWGManagerService()
+                        )
                         if peer.is_active and peer.rate_limit_mbps:
                             try:
                                 manager.set_rate_limit(
