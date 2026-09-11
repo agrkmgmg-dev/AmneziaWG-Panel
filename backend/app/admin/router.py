@@ -307,6 +307,30 @@ async def delete_user(
     )
 
 
+@router.get("/users/{user_id}/edit", response_class=HTMLResponse)
+async def edit_user_page(user_id: int, request: Request, service: AdminUserService = Depends(get_admin_user_service)):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    user = await service.get_user(user_id)
+    if not user:
+        return RedirectResponse(url="/admin/users", status_code=302)
+    return templates.TemplateResponse(request=request, name="admin/edit_user.html", context={"request": request, "user": user, "error": None})
+
+
+@router.post("/users/{user_id}/edit")
+async def edit_user(user_id: int, request: Request, username: str = Form(...), password: str = Form(""), service: AdminUserService = Depends(get_admin_user_service)):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    try:
+        user = await service.update_user(user_id, username.strip(), password)
+        if not user:
+            return RedirectResponse(url="/admin/users", status_code=302)
+    except ValueError as exc:
+        user = await service.get_user(user_id)
+        return templates.TemplateResponse(request=request, name="admin/edit_user.html", context={"request": request, "user": user, "error": str(exc)}, status_code=400)
+    return RedirectResponse(url="/admin/users", status_code=302)
+
+
 @router.get(
     "/users/create",
     response_class=HTMLResponse,

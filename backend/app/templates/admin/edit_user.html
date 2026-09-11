@@ -1,0 +1,15 @@
+{% extends "admin/base.html" %}
+{% block title %}ویرایش کاربر{% endblock %}
+{% block nav_users %}active{% endblock %}
+{% block page_title %}ویرایش کاربر{% endblock %}
+{% block page_subtitle %}تغییر نام کاربری و رمز عبور{% endblock %}
+{% block content %}
+<section class="form-card">
+{% if error %}<div class="error-box">⚠️ {{ error }}</div>{% endif %}
+<form method="post" class="admin-form">
+<div class="form-group"><label for="username">نام کاربری</label><input id="username" name="username" value="{{ user.username }}" required></div>
+<div class="form-group"><label for="password">رمز عبور جدید</label><input id="password" name="password" type="password" placeholder="برای حفظ رمز فعلی خالی بگذارید"></div>
+<div class="form-actions"><button class="btn btn-primary" type="submit">💾 ذخیره تغییرات</button><a class="btn btn-secondary" href="/admin/users">بازگشت</a></div>
+</form>
+</section>
+{% endblock %}

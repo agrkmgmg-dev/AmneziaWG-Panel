@@ -100,3 +100,17 @@ class AdminUserService:
         )
 
         return True
+
+    async def update_user(self, user_id: int, username: str, password: str | None) -> User | None:
+        user = await self.user_repository.get_by_id(user_id)
+        if not user:
+            return None
+        other = await self.user_repository.get_by_username(username)
+        if other and other.id != user_id:
+            raise ValueError("این نام کاربری قبلا ثبت شده است")
+        user.username = username
+        if password and password.strip():
+            user.hashed_password = hash_password(password)
+        await self.user_repository.session.commit()
+        await self.user_repository.session.refresh(user)
+        return user
