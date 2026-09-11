@@ -114,7 +114,9 @@ def validate_allowed_ips(value: str) -> None:
 
 def validate_rate(address: str, rate: str) -> tuple[ipaddress.IPv4Address, int]:
     try:
-        ip = ipaddress.ip_address(address)
+        # Panel stores peer addresses as CIDR strings (e.g. 10.8.2.3/32).
+        # Accept both CIDR and bare-IP forms on the control socket.
+        ip = ipaddress.ip_interface(address).ip if "/" in address else ipaddress.ip_address(address)
     except ValueError as exc:
         raise ValueError("invalid peer address") from exc
 
