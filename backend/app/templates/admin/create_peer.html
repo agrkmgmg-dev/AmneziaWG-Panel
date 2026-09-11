@@ -39,13 +39,15 @@
         </div>
 
         <div class="form-group">
-            <label for="user_id">انتخاب کاربر</label>
-            <select id="user_id" name="user_id" required>
-                <option value="" disabled selected>یک کاربر را انتخاب کنید</option>
-                {% for user in users or [] %}
-                <option value="{{ user.id }}">{{ user.username }}{% if user.peers %} — دارای کلاینت{% endif %}</option>
-                {% endfor %}
-            </select>
+            <label for="user_id">شناسه کاربر</label>
+            <input
+                id="user_id"
+                type="number"
+                name="user_id"
+                placeholder="مثلاً 12"
+                min="1"
+                required
+            >
         </div>
 
         <div class="form-group">
