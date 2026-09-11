@@ -6,6 +6,7 @@ server-side Admin Panel.
 """
 
 from datetime import datetime, timedelta
+import time
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.models.peer import Peer
@@ -210,16 +211,20 @@ class AdminPeerService:
         if auto_sync:
             try:
                 manager = self._manager(protocol)
-                manager.add_peer(
-                peer.public_key,
-                peer.address,
-                peer.preshared_key,
-                )
-                if peer.rate_limit_mbps:
-                    manager.set_rate_limit(
-                        peer.address,
-                        peer.rate_limit_mbps,
-                    )
+                last_error = None
+                for attempt in range(3):
+                    try:
+                        manager.add_peer(peer.public_key, peer.address, peer.preshared_key)
+                        if peer.rate_limit_mbps:
+                            manager.set_rate_limit(peer.address, peer.rate_limit_mbps)
+                        last_error = None
+                        break
+                    except Exception as exc:
+                        last_error = exc
+                        if attempt < 2:
+                            time.sleep(0.4)
+                if last_error is not None:
+                    raise last_error
             except Exception as exc:
                 await self.peer_repository.delete(peer)
                 raise RuntimeError(
