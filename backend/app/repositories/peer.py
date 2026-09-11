@@ -69,7 +69,7 @@ class PeerRepository(BaseRepository[Peer]):
             .where(
                 Peer.user_id == user_id
             )
-            .order_by(Peer.id)
+            .order_by(Peer.id.desc())
         )
 
         return list(
@@ -88,7 +88,7 @@ class PeerRepository(BaseRepository[Peer]):
             .options(
                 selectinload(Peer.user)
             )
-            .order_by(Peer.id)
+            .order_by(Peer.id.desc())
         )
 
         return list(
