@@ -481,6 +481,7 @@ async def peers(
 )
 async def create_peer_page(
     request: Request,
+    user_service: AdminUserService = Depends(get_admin_user_service),
 ):
 
     if not is_admin_authenticated(request):
@@ -495,6 +496,7 @@ async def create_peer_page(
         context={
             "request": request,
             "error": None,
+            "users": await user_service.get_users(),
         },
     )
 
@@ -550,6 +552,7 @@ async def create_peer(
     service: AdminPeerService = Depends(
         get_admin_peer_service
     ),
+    user_service: AdminUserService = Depends(get_admin_user_service),
 ):
     if not is_admin_authenticated(request):
         return RedirectResponse(
@@ -585,7 +588,7 @@ async def create_peer(
         return templates.TemplateResponse(
             request=request,
             name="admin/create_peer.html",
-            context={"request": request, "error": str(exc)},
+            context={"request": request, "error": str(exc), "users": await user_service.get_users()},
             status_code=400,
         )
 
