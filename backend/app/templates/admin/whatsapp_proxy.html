@@ -1,0 +1,13 @@
+{% extends "admin/base.html" %}
+{% block title %}پراکسی واتساپ - AmneziaWG Panel{% endblock %}
+{% block nav_whatsapp %}active{% endblock %}
+{% block page_title %}پراکسی واتساپ{% endblock %}
+{% block page_subtitle %}اتصال واتساپ از طریق پراکسی اختصاصی سرور{% endblock %}
+{% block content %}
+<section class="form-card">
+    <div class="form-header"><div class="form-icon purple-bg">💬</div><div><h2>WhatsApp Proxy</h2><p>سرویس پراکسی روی سرور فعال است.</p></div></div>
+    <div class="info-box"><strong>آدرس اتصال:</strong> <code>{{ proxy_host }}:{{ proxy_port }}</code></div>
+    <div class="info-box">در واتساپ مسیر <strong>Settings → Storage and Data → Proxy</strong> را باز کن و آدرس بالا را وارد کن.</div>
+    <div class="info-box">پراکسی واتساپ برای پیام‌هاست؛ تماس صوتی و تصویری پشتیبانی نمی‌شود.</div>
+</section>
+{% endblock %}

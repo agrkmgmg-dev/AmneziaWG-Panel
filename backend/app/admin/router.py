@@ -41,6 +41,18 @@ templates = Jinja2Templates(
 )
 
 
+@router.get("/whatsapp-proxy", response_class=HTMLResponse)
+async def whatsapp_proxy_page(request: Request):
+    if not is_admin_authenticated(request):
+        return RedirectResponse(url="/admin/login", status_code=302)
+    host = settings.WG_ENDPOINT.split(":", 1)[0]
+    return templates.TemplateResponse(
+        request=request,
+        name="admin/whatsapp_proxy.html",
+        context={"request": request, "proxy_host": host, "proxy_port": "5222"},
+    )
+
+
 def _parse_optional_gb(value: str | None) -> float | None:
     """Treat an empty HTML number field as an unlimited traffic quota."""
     if value is None or not value.strip():
